@@ -1,8 +1,8 @@
-#include "proj_lib/proj_lib.h"
+#include "phase1/ProcQ.h"
 
 int main()
 {
-	term_puts("hello, world\n");
+	say_hello();
 
 	/* Go to sleep and power off the machine if anything wakes us up */
 	WAIT();

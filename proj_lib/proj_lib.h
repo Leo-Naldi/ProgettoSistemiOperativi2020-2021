@@ -18,10 +18,8 @@
 
 typedef unsigned int u32;
 
-// Stampa str sul terminale 0
 void term_puts(const char *str);
 
-// Stampa il carattere c sul terminale 0
 int term_putchar(char c);
 u32 tx_status(termreg_t *tp);
 

@@ -1,0 +1,28 @@
+# Settig compiler and search dirs
+
+CROSS_TOOLS_PREF = mipsel-linux-gnu-
+
+CC = $(CROSS_TOOLS_PREF)gcc
+LD = $(CROSS_TOOLS_PREF)ld
+
+# i file potrebbero anche essere installati in /usr/local o in qualche altro posto strano
+# in caso basta cambiare UMPS_PREFIX a mano
+UMPS_PREFIX = /usr
+
+UMPS_DATA = $(UMPS_PREFIX)/share/umps3
+UMPS_INCLUDE = $(UMPS_PREFIX)/include/umps3
+
+# Flags del Linker
+LINK_FLAGS = -G 0 -nostdlib -T $(UMPS_DATA)/umpscore.ldscript
+
+# Compiler Flags
+CFLAGS_LANG = -ffreestanding -ansi
+CFLAGS_MIPS = -mips1 -mabi=32 -mno-gpopt -G 0 -mno-abicalls -fno-pic -mfp32 -Wall -O0
+
+PROJ_LIB_PATH = proj_lib
+PHASE1_PATH = phase1
+
+CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) -I$(UMPS_DATA) -I$(UMPS_INCLUDE) -I$(PROJ_LIB_PATH) -I$(PHASE1_PATH)
+
+# perche' metterci tutto? perche' si
+VPATH = $(UMPS_DATA) $(UMPS_INCLUDE) $(PROJ_LIB_PATH) $(PHASE1_PATH)
