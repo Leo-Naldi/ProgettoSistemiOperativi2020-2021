@@ -18,11 +18,17 @@
 
 typedef unsigned int u32;
 
+typedef unsigned int size_t;
+
 void term_puts(const char *str);
 
 int term_putchar(char c);
+
 u32 tx_status(termreg_t *tp);
 
 static termreg_t *term0_reg = (termreg_t *) DEV_REG_ADDR(IL_TERMINAL, 0);
+
+void* memset(void* str, int c, size_t n);
+
 
 #endif
