@@ -4,17 +4,27 @@ include makesettings
 # dir dove verranno messi i file oggetto
 BUILD_DIR = build
 
+# Lista dei source file di src
+PROJ_LIB_SRC := $(notdir $(wildcard proj_lib/*.c))
 
-# Lista dei file oggetto da creare partendo dai .c di phase1 e proj_lib, per aggiungerne di nuovi basta aggiungere:
-# $(BUILD_DIR)/nome_del_file.o (ogni file .c dovrebbe avere un corrispettivo .o in una delle liste)
+# Lista dei source file in phase1
+PHASE1_SRC := $(notdir $(wildcard phase1/*.c))
 
-PROJ_LIB_OBJS := $(BUILD_DIR)/proj_lib.o
-PHASE1_OBJS := $(BUILD_DIR)/ProcQ.o
+# Queste righe stampano i contenuti di PROJ_LIB_SRC e PHSE1_SRC se decommentate
+# $(info proj lib src is $(PROJ_LIB_SRC))
+# $(info phase1 src is $(PHASE1_SRC))
 
+# Sostituisce i .c con .o nei file sorgenti e aggiunge il prefisso $(BUILD_DIR)/ 
+# per generare automaticamente i nomi dei file oggetto
+PROJ_LIB_OBJS := $(patsubst %.c, $(BUILD_DIR)/%.o, $(PROJ_LIB_SRC))
+PHASE1_OBJS := $(patsubst %.c, $(BUILD_DIR)/%.o, $(PHASE1_SRC))
+
+# $(info lib obj $(PROJ_LIB_OBJS))
+# $(info phase 1 obj $(PHASE1_OBJS))
+
+# Prima o poi automatizzero' anche questo i swear
 UMPS_LIB_OBJS = $(BUILD_DIR)/crtso.o $(BUILD_DIR)/libumps.o
 
-# Esiste un modo per prendere tutti i nomi dei file .c, attaccarci davanti $(BUILD_DIR)/ e 
-# rimpiazzare il .c con un .o automaticamente? Assolutamente si (ma ora non ne ho voglia so //TODO)
 
 .PHONY: all clean
 
@@ -24,7 +34,7 @@ kernel.core.umps : kernel
 
 	umps3-elf2umps -k $<
 
-kernel : build/main.o $(PROJ_LIB_OBJS) $(UMPS_LIB_OBJS) $(PHASE1_OBJS)
+kernel : $(BUILD_DIR)/main.o $(PROJ_LIB_OBJS) $(UMPS_LIB_OBJS) $(PHASE1_OBJS)
 
 	$(LD) -o $@ $^ $(LINK_FLAGS)
 
