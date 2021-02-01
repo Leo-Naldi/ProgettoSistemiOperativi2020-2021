@@ -22,7 +22,8 @@ CFLAGS_MIPS = -mips1 -mabi=32 -mno-gpopt -G 0 -mno-abicalls -fno-pic -mfp32 -Wal
 PROJ_LIB_PATH = proj_lib
 PHASE1_PATH = phase1
 
-CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) -I$(UMPS_DATA) -I$(UMPS_INCLUDE) -I$(PROJ_LIB_PATH) -I$(PHASE1_PATH)
+CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) -I$(UMPS_DATA) -I$(UMPS_INCLUDE) -I$(PROJ_LIB_PATH) 
 
 # perche' metterci tutto? perche' si
 VPATH = $(UMPS_DATA) $(UMPS_INCLUDE) $(PROJ_LIB_PATH) $(PHASE1_PATH)
+
