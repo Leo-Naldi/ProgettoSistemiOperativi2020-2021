@@ -17,8 +17,3 @@ pcb_t* removeProcQ(pcb_t **tp){
   return toBeRemoved;
 }
 
-/* da rimuovere */
-void say_hello()
-{
-	term_puts("hello!\n");
-}

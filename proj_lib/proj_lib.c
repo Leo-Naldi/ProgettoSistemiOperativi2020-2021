@@ -1,10 +1,11 @@
 #include "proj_lib.h"
 
-void term_puts(const char *str)
+
+static termreg_t *term0_reg = (termreg_t *) DEV_REG_ADDR(IL_TERMINAL, 0);
+
+u32 tx_status(termreg_t *tp)
 {
-	while (*str)
-		if (term_putchar(*str++))
-			return;
+	return ((tp->transm_status) & TERM_STATUS_MASK);
 }
 
 int term_putchar(char c)
@@ -28,9 +29,11 @@ int term_putchar(char c)
 		return 0;
 }
 
-u32 tx_status(termreg_t *tp)
+void term_puts(const char *str)
 {
-	return ((tp->transm_status) & TERM_STATUS_MASK);
+	while (*str)
+		if (term_putchar(*str++))
+			return;
 }
 
 

@@ -2,13 +2,17 @@
 #include "pandos_const.h"
 #include "proj_lib.h"
 
-
-pcb_PTR pcbFree_h;
-pcb_t pcbFree_table[MAXPROC];
+/*
+ * Free list, implementata come puntatore alla testa di
+ * una lista monodirezionale di pcb (collegata tramite il
+ * campo p_next).
+ * */
+static volatile pcb_PTR pcbFree_h;
 
 
 void initPcbs(void){
 	
+	static pcb_t pcbFree_table[MAXPROC];
 	pcbFree_h = NULL;
 
 	int i;

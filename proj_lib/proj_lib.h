@@ -26,9 +26,12 @@ int term_putchar(char c);
 
 u32 tx_status(termreg_t *tp);
 
-static termreg_t *term0_reg = (termreg_t *) DEV_REG_ADDR(IL_TERMINAL, 0);
-
+/*
+ * Scrive negli n byte a partire da str il valore c (interpretato come unsigned char).
+ * Undefined se str e' NULL.
+ * */
 void* memset(void* str, int c, size_t n);
 
 
 #endif
+
