@@ -19,11 +19,16 @@ LINK_FLAGS = -G 0 -nostdlib -T $(UMPS_DATA)/umpscore.ldscript
 CFLAGS_LANG = -ffreestanding -ansi
 CFLAGS_MIPS = -mips1 -mabi=32 -mno-gpopt -G 0 -mno-abicalls -fno-pic -mfp32 -Wall -O0
 
-PROJ_LIB_PATH = proj_lib
-PHASE1_PATH = phase1
+PROJ_LIB_PATH = ./proj_lib
+PHASE1_PATH = ./phase1
+TESTERS_PATH = ./testers
 
 CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) -I$(UMPS_DATA) -I$(UMPS_INCLUDE) -I$(PROJ_LIB_PATH) 
 
+# Flag per creare e aggiornare le depedencies (.d files), contenuti nella stessa dir 
+# dei file oggetto
+OUTPUT_OPTION = -MMD -MP 
+
 # perche' metterci tutto? perche' si
-VPATH = $(UMPS_DATA) $(UMPS_INCLUDE) $(PROJ_LIB_PATH) $(PHASE1_PATH)
+VPATH = $(UMPS_DATA) $(UMPS_INCLUDE) $(PROJ_LIB_PATH) $(PHASE1_PATH) $(TESTERS_PATH)
 

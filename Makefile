@@ -1,8 +1,8 @@
 # File che definisce compilatore, linker, flags e vpath
 include makesettings
 
-# dir dove verranno messi i file oggetto
-BUILD_DIR = build
+# dir dove verranno messi i file oggetto e i file .d
+BUILD_DIR = ./build
 
 # Lista dei source file di src
 PROJ_LIB_SRC := $(notdir $(wildcard proj_lib/*.c))
@@ -10,31 +10,30 @@ PROJ_LIB_SRC := $(notdir $(wildcard proj_lib/*.c))
 # Lista dei source file in phase1
 PHASE1_SRC := $(notdir $(wildcard phase1/*.c))
 
-# Queste righe stampano i contenuti di PROJ_LIB_SRC e PHSE1_SRC se decommentate
-# $(info proj lib src is $(PROJ_LIB_SRC))
-# $(info phase1 src is $(PHASE1_SRC))
-
 # Sostituisce i .c con .o nei file sorgenti e aggiunge il prefisso $(BUILD_DIR)/ 
 # per generare automaticamente i nomi dei file oggetto
 PROJ_LIB_OBJS := $(patsubst %.c, $(BUILD_DIR)/%.o, $(PROJ_LIB_SRC))
 PHASE1_OBJS := $(patsubst %.c, $(BUILD_DIR)/%.o, $(PHASE1_SRC))
 
-# $(info lib obj $(PROJ_LIB_OBJS))
-# $(info phase 1 obj $(PHASE1_OBJS))
-
 # Prima o poi automatizzero' anche questo i swear
 UMPS_LIB_OBJS = $(BUILD_DIR)/crtso.o $(BUILD_DIR)/libumps.o
 
+# Quando sara' tutto implementato andra' cambiato col nome del test
+TARGET_TEST = main
+
+DEPS = $(PROJ_LIB_SRC:.c=.d) $(PHASE1_SRC:.c=.d) $(TARGET_TEST).d
 
 .PHONY: all clean
 
 all : kernel.core.umps
 
+-include $(patsubst %, $(BUILD_DIR)/%, $(DEPS))
+
 kernel.core.umps : kernel
 
 	umps3-elf2umps -k $<
 
-kernel : $(BUILD_DIR)/main.o $(PROJ_LIB_OBJS) $(UMPS_LIB_OBJS) $(PHASE1_OBJS)
+kernel : $(BUILD_DIR)/$(TARGET_TEST).o $(PROJ_LIB_OBJS) $(UMPS_LIB_OBJS) $(PHASE1_OBJS)
 
 	$(LD) -o $@ $^ $(LINK_FLAGS)
 
@@ -42,7 +41,7 @@ kernel : $(BUILD_DIR)/main.o $(PROJ_LIB_OBJS) $(UMPS_LIB_OBJS) $(PHASE1_OBJS)
 # Pattern rule per i file oggetto
 $(BUILD_DIR)/%.o : %.c 
 
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(OUTPUT_OPTION) -c -o $@ $<
 
 
 # Pattern rule per compilare i file lassembler
@@ -53,9 +52,15 @@ $(BUILD_DIR)/%.o : %.S
 
 clean:
 
-	rm $(BUILD_DIR)/*.o
-	rm kernel
-	rm kernel.*.umps
+	-@rm -f $(BUILD_DIR)/*.o
+	-@rm -f  kernel
+	-@rm -f  kernel.*.umps
 
+help: 
+	-@echo make \(all\): costrusce kernel, kernel.stab.umps e kernel.core.umps
+	-@echo make kernel: costrusce kernel ma non i file .umps \(non viene eseguito umps3-elf2umps\)
+	-@echo make clean: rimuove i file .o .umps e kernel
+	-@echo 
+	-@echo i file intermedi \(.o\) sono contenuti nella directory $(BUILD_DIR), insieme ai file .d
 
 # Al termine della compilazione i file .o saranno nella cartella build, mentre i file kernel e .umps saranno nella root del progetto

@@ -1,6 +1,4 @@
-#include "pandos_types.h"
-#include "pandos_const.h"
-#include "proj_lib.h"
+#include "ProcBasics.h"
 
 /*
  * Free list, implementata come puntatore alla testa di
