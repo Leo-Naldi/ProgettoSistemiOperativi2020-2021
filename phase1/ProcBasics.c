@@ -14,7 +14,7 @@ void initPcbs(void){
 	pcbFree_h = NULL;
 
 	int i;
-	for (i = MAXPROC - 1; i > -1; i--)
+	for (i = 0; i < MAXPROC; i++)
 	{
 		(pcbFree_table + i)->p_next = pcbFree_h;
 		pcbFree_h = pcbFree_table + i;
