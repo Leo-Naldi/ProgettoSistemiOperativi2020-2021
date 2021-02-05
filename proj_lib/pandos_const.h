@@ -152,4 +152,6 @@
 /* End of Mikeyg constants */
 
 
+#define MAXINT 0xFFFFFFFF
+
 #endif

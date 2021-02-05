@@ -31,5 +31,15 @@ typedef struct pcb_t {
 	/* add more fields here */
 
 }  pcb_t, *pcb_PTR;
-	
+
+
+/* Semaphre descriptor type */
+typedef struct semd_t {
+
+	struct semd_t *s_next;   /* next element in the ASL */
+	int           *s_semAdd; /* pointer to the semaphore */
+	pcb_t         *s_procQ;   /* pointer to tail of blocked process queue*/
+
+} semd_t, *semd_PTR;
+
 #endif
