@@ -36,4 +36,14 @@ pcb_PTR allocPcb(void)
 
 void freePcb(pcb_PTR p)
 {
+	
+	if(!pcbFree_h){
+		pcbFree_h = p;
+		p->p_next = NULL;
+	}
+	else {
+		pcb_PTR sup = pcbFree_h;
+		p->p_next = sup;
+		pcbFree_h = p;
+	}
 }

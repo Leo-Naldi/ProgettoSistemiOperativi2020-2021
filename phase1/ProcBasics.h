@@ -14,6 +14,7 @@ void initPcbs(void);
  * */
 pcb_PTR allocPcb(void);
 
+/* Inserisce in lista il pcb passatogli */
 void freePcb(pcb_PTR p);
 
 #endif
