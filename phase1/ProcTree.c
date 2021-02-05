@@ -5,13 +5,11 @@ void insertChild(pcb_PTR prnt, pcb_PTR p)
 	if(p == NULL)
 		return;
 	if(prnt->p_child == NULL){
-		term_puts("siamo nel secondo if\n");
 		prnt->p_child =p;
 		p->p_next_sib = NULL;
 		p->p_prev_sib = NULL;
 		p->p_prnt = prnt;
 	} else {
-		term_puts("siamo nel else\n");
 		prnt->p_child->p_prev_sib = p;	
 		p->p_next_sib = prnt->p_child;
 		p->p_prev_sib = NULL;
@@ -41,9 +39,29 @@ pcb_PTR outChild(pcb_PTR p)
  {	
  	if(p->p_prnt == NULL)
  		return NULL;
- 	pcb_PTR res = p;
- 	p->p_prnt = NULL;
- 	p->p_next_sib->p_prev_sib = p->p_prev_sib;
- 	p->p_prev_sib->p_next_sib = p->p_next_sib;
+ 	pcb_PTR res;
+ 	if(p->p_next_sib != NULL && p->p_prev_sib != NULL){
+ 		res = p;
+ 		res->p_next_sib->p_prev_sib = res->p_prev_sib;
+ 		res->p_prev_sib->p_next_sib = res->p_next_sib;
+ 		res->p_prnt = NULL;
+ 		res->p_next_sib = NULL;
+ 		res->p_prev_sib = NULL;
+ 	} else if(p->p_prev_sib == NULL){
+ 		res = p;
+ 		res->p_prnt->p_child = res->p_next_sib;
+ 	 	res->p_prnt = NULL;
+ 	 	res->p_next_sib->p_prev_sib = NULL;
+ 	 	res->p_next_sib = NULL;
+ 	} else if (p->p_next_sib == NULL){
+ 		res = p;
+ 	 	res->p_prnt = NULL;
+ 		res->p_prev_sib->p_next_sib = NULL;
+ 		res->p_prev_sib = NULL;
+ 	} else {
+ 		res = p;
+ 		res->p_prnt->p_child = NULL;
+ 		res->p_prnt = NULL;
+ 	}
  	return res;
  }

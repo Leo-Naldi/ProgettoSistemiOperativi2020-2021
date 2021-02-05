@@ -26,6 +26,12 @@ pcb_PTR removeChild(pcb_PTR p);
  * Rimuove dalla lista dei figli il pcb puntato da p
  * 
  * Se il pcb è orfano (non ha padre) allora NULL
+ *
+ *  casi possibili:
+ *   figlio senza fratelli
+ *   figlio con fratelli a dx
+ *   figlio con fratelli a sx
+ *   figlio con fratelli a dx e sx
  */
  
 pcb_PTR outChild(pcb_PTR p);
