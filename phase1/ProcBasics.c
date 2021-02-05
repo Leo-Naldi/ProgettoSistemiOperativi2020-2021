@@ -30,6 +30,12 @@ pcb_PTR allocPcb(void)
 	pcb_PTR res = pcbFree_h;
 	pcbFree_h = pcbFree_h->p_next;
 	res->p_next = NULL;
+	res->p_prev = NULL;
+	res->p_prnt = NULL;
+	res->p_child = NULL;
+	res->p_next_sib = NULL;
+	res->p_prev_sib = NULL;
+	res->p_semAdd = NULL;
 
 	return res;
 }
