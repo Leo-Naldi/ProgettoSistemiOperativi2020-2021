@@ -17,3 +17,6 @@ pcb_t* removeProcQ(pcb_t **tp){
   return toBeRemoved;
 }
 
+pcb_t* outProcQ(pcb_t **tp, pcb_t *p){
+	return NULL;
+}

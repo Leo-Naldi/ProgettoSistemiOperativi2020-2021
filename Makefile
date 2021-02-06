@@ -21,20 +21,21 @@ UMPS_LIB_OBJS = $(BUILD_DIR)/crtso.o $(BUILD_DIR)/libumps.o
 # Quando sara' tutto implementato andra' cambiato col nome del test
 TARGET_TEST = main
 
-DEPS = $(PROJ_LIB_SRC:.c=.d) $(PHASE1_SRC:.c=.d) $(TARGET_TEST).d
+DEPS = $(PROJ_LIB_SRC:.c=.d) $(PHASE1_SRC:.c=.d) $(BUILD_DIR)/$(TARGET_TEST).d
+
+$(shell mkdir -p $(BUILD_DIR))
 
 .PHONY: all clean
 
-all : kernel.core.umps
+all : kernel.core.umps | $(BUILD_DIR)
 
 -include $(patsubst %, $(BUILD_DIR)/%, $(DEPS))
 
-kernel.core.umps : kernel
-
+kernel.core.umps : kernel 
 	umps3-elf2umps -k $<
 
 kernel : $(BUILD_DIR)/$(TARGET_TEST).o $(PROJ_LIB_OBJS) $(UMPS_LIB_OBJS) $(PHASE1_OBJS)
-
+	
 	$(LD) -o $@ $^ $(LINK_FLAGS)
 
 
@@ -49,7 +50,6 @@ $(BUILD_DIR)/%.o : %.S
 
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-
 clean:
 
 	-@rm -f $(BUILD_DIR)/*.o
@@ -61,6 +61,13 @@ help:
 	-@echo make kernel: costrusce kernel ma non i file .umps \(non viene eseguito umps3-elf2umps\)
 	-@echo make clean: rimuove i file .o .umps e kernel
 	-@echo 
-	-@echo i file intermedi \(.o\) sono contenuti nella directory $(BUILD_DIR), insieme ai file .d
+	-@echo I file intermedi \(.o\) sono contenuti nella directory $(BUILD_DIR), insieme ai file .d
+	-@echo
+	-@echo se i file di umps non sono ne in /usr ne in /usr/local, occorre settare a mano la variabile \
+		UMPS_PREFIX nel file makesettings 
+	-@echo Se il cross-compiler \(mipsel-linux-gnu-gcc\) e il linker non sono in path occorre settare le variabili \
+		corrispondenti in makesettings
+
+
 
 # Al termine della compilazione i file .o saranno nella cartella build, mentre i file kernel e .umps saranno nella root del progetto

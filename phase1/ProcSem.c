@@ -38,3 +38,9 @@ static semd_PTR searchAdd(int* semAdd)
 	return NULL;
 }
 
+pcb_PTR outBlocked(pcb_PTR p)
+{
+	semd_PTR s = searchAdd(p->p_semAdd);
+	
+	return outProcQ(&(s->s_procQ), p);
+}
