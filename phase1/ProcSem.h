@@ -14,4 +14,10 @@
  * */
 pcb_PTR outBlocked(pcb_PTR p);
 
+/*
+ * Return the pointer at the head of the queue associated at semAdd
+ * Return NULL if thw queue is empty or the semAdd doesn't exist
+ */
+ pcb_PTR headBlocked(int semAdd);
+
 #endif

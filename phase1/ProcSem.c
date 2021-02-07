@@ -44,3 +44,14 @@ pcb_PTR outBlocked(pcb_PTR p)
 	
 	return outProcQ(&(s->s_procQ), p);
 }
+
+pcb_PTR headBlocked(int* semAdd)
+{
+	semd_PTR sp = searchAdd(semAdd);
+	if(sp == NULL)
+		return NULL;
+	if(emptyProcQ(sp->s_procQ))
+		return headProcQ(sp->s_procQ);
+	else
+		return NULL;
+}
