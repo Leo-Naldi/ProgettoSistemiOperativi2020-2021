@@ -10,10 +10,11 @@ int emptyProcQ(pcb_t *tp){
 }
 
 pcb_t* removeProcQ(pcb_t **tp){
+  if(tp == NULL) return NULL;
   if(*tp == NULL) return NULL;
-  pcb_t *toBeRemoved = (*tp)->p_prev;
-  toBeRemoved->p_prev->p_next = *tp;
-  (*tp)->p_prev = toBeRemoved->p_prev;
+  pcb_t *toBeRemoved = (*tp)->p_next;
+  toBeRemoved->p_next->p_prev = *tp;
+  (*tp)->p_next = toBeRemoved->p_next;
   return toBeRemoved;
 }
 

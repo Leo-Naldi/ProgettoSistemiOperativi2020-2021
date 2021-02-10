@@ -55,3 +55,23 @@ pcb_PTR headBlocked(int* semAdd)
 	else
 		return NULL;
 }
+
+int insertBlocked(int *semAdd, pcb_t *p){
+  semd_PTR tmp = semd_h;
+  while(tmp != NULL && tmp->s_semAdd != semAdd) tmp = tmp->s_next;
+  if(tmp != NULL){
+    insertProcQ(&(tmp->s_procQ), p);
+    return 0;
+  }
+  if(semdFree_h == NULL) return 1;
+  tmp = semdFree_h;
+  semdFree_h = semdFree_h->s_next;
+  semd_PTR sliding_tmp = semd_h;
+  while(sliding_tmp->s_next != NULL && *(sliding_tmp->s_next->s_semAdd) > *semAdd) sliding_tmp = sliding_tmp->s_next;
+  tmp->s_next = sliding_tmp->s_next;
+  sliding_tmp->s_next = tmp;
+  tmp->s_semAdd = semAdd;
+  tmp->s_procQ = mkEmptyProcQ();
+  insertProcQ(&(tmp->s_procQ), p);
+  return 0;
+}
