@@ -84,7 +84,7 @@ int insertBlocked(int *semAdd, pcb_t *p){
   semdFree_h = semdFree_h->s_next;        /* Aggiorna il head di semdFree */
   semd_PTR sliding_tmp = semd_h;          /* Inizializza il puntatore al head dell'ASL neccessario per scorrere la lista 
 					   * fino alla posizione giusta per inserire il nuovo elemento puntato dal semd */  
-  while(sliding_tmp->s_next != NULL && *(sliding_tmp->s_next->s_semAdd) > *semAdd) sliding_tmp = sliding_tmp->s_next;
+  while(sliding_tmp->s_next != NULL && sliding_tmp->s_next->s_semAdd > semAdd) sliding_tmp = sliding_tmp->s_next;
   tmp->s_next = sliding_tmp->s_next;      /* A questo punto si aggiunge tmp nell'ASL fra sliding_tmp e sliding_tmp->s_next */ 
   sliding_tmp->s_next = tmp;
   tmp->s_semAdd = semAdd;                 /* L'inizializzazione dei campi di tmp */
