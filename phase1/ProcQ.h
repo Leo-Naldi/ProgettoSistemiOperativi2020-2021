@@ -20,7 +20,7 @@ pcb_t* outProcQ(pcb_t **tp, pcb_t *p);
 
 /* Restituisce l’elemento in fondo alla coda dei processi tp, SENZA RIMUOVERLO.
  * Ritorna NULL se la coda non ha elementi. */
-pcb_PTR headProcQ(pcb_t** tp);
+pcb_PTR headProcQ(pcb_t* tp);
 
 /* Inserisce l’elemento puntato da p nella coda dei processi tp. La doppia
  * indirezione su tp serve per poter inserire p come ultimo elemento della coda. */

@@ -62,11 +62,11 @@ pcb_t* outProcQ(pcb_t **tp, pcb_t *p){
 	return target;
 }
 
-pcb_PTR headProcQ(pcb_t** tp){
-	if (*tp == NULL) 
+pcb_PTR headProcQ(pcb_t* tp){
+	if (tp == NULL) 
 		return NULL;
 	else
-		return (*tp)->p_next;
+		return (tp)->p_next;
 }
 
 void insertProcQ(pcb_t **tp, pcb_t *p)
