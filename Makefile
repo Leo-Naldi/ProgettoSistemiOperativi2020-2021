@@ -19,7 +19,7 @@ PHASE1_OBJS := $(patsubst %.c, $(BUILD_DIR)/%.o, $(PHASE1_SRC))
 UMPS_LIB_OBJS = $(BUILD_DIR)/crtso.o $(BUILD_DIR)/libumps.o
 
 # Quando sara' tutto implementato andra' cambiato col nome del test
-TARGET_TEST = main
+TARGET_TEST = p1test
 
 DEPS = $(PROJ_LIB_SRC:.c=.d) $(PHASE1_SRC:.c=.d) $(BUILD_DIR)/$(TARGET_TEST).d
 

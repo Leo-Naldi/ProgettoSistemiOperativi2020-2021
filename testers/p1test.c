@@ -16,8 +16,15 @@
 #include <pandos_types.h>
 
 #include <umps3/umps/libumps.h>
+/*
 #include <pcb.h>
 #include <asl.h>
+*/
+
+#include "ProcQ.h"
+#include "ProcBasics.h"
+#include "ProcTree.h"
+#include "ProcSem.h"
 
 #define MAXPROC	20
 #define	MAXSEM	MAXPROC
