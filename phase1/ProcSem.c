@@ -43,16 +43,17 @@ void initASL(void)
 	static semd_t semdFree_table[MAXPROC + 2];
 	int i;
 
+	semdFree_h = NULL;
 	for (i = 0; i < MAXPROC; i++)
 	{
 		(semdFree_table + i)->s_next = semdFree_h;
 		semdFree_h = semdFree_table + i;
 	}
-
 	(semdFree_table + MAXPROC)->s_semAdd = (int*) 0;
-	(semdFree_table + MAXPROC)->s_next = semdFree_table + MAXPROC + 1;
+	(semdFree_table + MAXPROC)->s_next = (semd_t*) semdFree_table + MAXPROC + 1;
 	(semdFree_table + MAXPROC + 1)->s_semAdd = (int*) MAXINT;
-	semd_h = semdFree_table + MAXPROC;
+	(semdFree_table + MAXPROC + 1)->s_next = NULL;
+	semd_h = (semd_t*) (semdFree_table + MAXPROC);
 }
 
 pcb_PTR outBlocked(pcb_PTR p)
@@ -74,32 +75,22 @@ pcb_PTR headBlocked(int* semAdd)
 }
 
 int insertBlocked(int *semAdd, pcb_t *p){
-  addokbuf("i0\n");
   semd_PTR tmp = searchAdd(semAdd);       /* Fa la ricerca del semaforo con la chiave semAdd */
-  addokbuf("i01\n");
-  addokbuf("i1\n");
   if(tmp != NULL){                        /* Questo if gestisce il caso in cui il semaforo e' stato trovato */
     insertProcQ(&(tmp->s_procQ), p);
     return 0;
   }
-  addokbuf("i2\n");
   if(semdFree_h == NULL) return 1;        /* Ritorna TRUE se la lista dei SEMD liberi o inutilizzati e' vuota */ 
   tmp = semdFree_h;                       /* Prende il primo elemento della semdFree per poi inserirlo nell'ASL */
   semdFree_h = semdFree_h->s_next;          /* Aggiorna il head di semdFree */
   semd_PTR sliding_tmp = semd_h;          /* Inizializza il puntatore al head dell'ASL neccessario per scorrere la lista 
 					   * fino alla posizione giusta per inserire il nuovo elemento puntato dal semd */  
-  addokbuf("i3\n");
   while(sliding_tmp->s_next->s_semAdd < semAdd) sliding_tmp = sliding_tmp->s_next;
-  addokbuf("i4\n");
   tmp->s_next = sliding_tmp->s_next;      /* A questo punto si aggiunge tmp nell'ASL fra sliding_tmp e sliding_tmp->s_next */ 
   sliding_tmp->s_next = tmp;
-  addokbuf("i41\n");
   tmp->s_semAdd = semAdd;                 /* L'inizializzazione dei campi di tmp */
-  addokbuf("i42\n");
   tmp->s_procQ = mkEmptyProcQ();
-  addokbuf("i5\n");
   insertProcQ(&(tmp->s_procQ), p);
-  addokbuf("i6\n");
   return 0;
 }
 
