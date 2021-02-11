@@ -68,7 +68,7 @@ pcb_PTR headBlocked(int* semAdd)
 	if(sp == NULL)
 		return NULL;
 	if(emptyProcQ(sp->s_procQ))
-		return headProcQ(sp->s_procQ);
+		return headProcQ(&sp->s_procQ);
 	else
 		return NULL;
 }
