@@ -24,10 +24,10 @@ int emptyProcQ(pcb_t *tp){
 }
 
 pcb_t* removeProcQ(pcb_t **tp){
-  if(tp == NULL) return NULL;
-  if(*tp == NULL) return NULL;
-  pcb_t *toBeRemoved = (*tp)->p_next;
-  remove(toBeRemoved);
+  if(emptyProcQ(*tp)) return NULL;     /* Il caso in cui la coda e' vuota. */
+  pcb_t *toBeRemoved = (*tp)->p_next;  /* L'inizializzazione di toBeRemoved che deve puntare a head */
+  if(remove(toBeRemoved))              /* Gestisce il caso in cui la coda contiene solamente un elemento */
+    *tp = NULL;
   return toBeRemoved;
 }
 

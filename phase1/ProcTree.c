@@ -1,5 +1,10 @@
 #include "ProcTree.h"
 
+int emptyChild(pcb_t *p){
+  if(p->p_child == NULL) return 1;
+  return 0;
+}
+
 void insertChild(pcb_PTR prnt, pcb_PTR p)
 {
 	if(p == NULL)
@@ -22,7 +27,6 @@ pcb_PTR removeChild(pcb_PTR p)
 {
 	if (p->p_child == NULL)
 		return NULL;
-
 	pcb_PTR target = p->p_child;
 	p->p_child = (p->p_child)->p_next_sib;
 
