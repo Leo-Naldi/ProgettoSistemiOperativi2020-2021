@@ -7,6 +7,9 @@
 
 #include "ProcQ.h"
 
+
+void initASL(void);
+
 /*
  * Rimuove p dalla lista dei processi bloccati del suo semaforo,
  * ritorna NULL se p non e' presente, esplode se il semaforo corrismpondente
@@ -29,5 +32,6 @@ pcb_PTR headBlocked(int* semAdd);
  */
 int insertBlocked(int *semAdd, pcb_t *p);
 
+pcb_t* removeBlocked(int *semAdd);
 
 #endif

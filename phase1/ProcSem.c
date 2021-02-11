@@ -38,6 +38,23 @@ static semd_PTR searchAdd(int* semAdd)
 	return NULL;
 }
 
+void initASL(void)
+{
+	static semd_t semdFree_table[MAXPROC + 2];
+	int i;
+
+	for (i = 0; i < MAXPROC; i++)
+	{
+		(semdFree_table + i)->s_next = semdFree_h;
+		semdFree_h = semdFree_table + i;
+	}
+
+	(semdFree_table + MAXPROC)->s_semAdd = (int*) 0;
+	(semdFree_table + MAXPROC)->s_next = semdFree_table + MAXPROC + 1;
+	(semdFree_table + MAXPROC + 1)->s_semAdd = (int*) MAXINT;
+	semd_h = semdFree_table + MAXPROC;
+}
+
 pcb_PTR outBlocked(pcb_PTR p)
 {
 	semd_PTR s = searchAdd(p->p_semAdd);
@@ -74,4 +91,30 @@ int insertBlocked(int *semAdd, pcb_t *p){
   tmp->s_procQ = mkEmptyProcQ();
   insertProcQ(&(tmp->s_procQ), p);
   return 0;
+}
+
+pcb_t* removeBlocked(int *semAdd)
+{
+	semd_t* s = searchAdd(semAdd);
+
+	if (s == NULL)
+	{
+		return NULL;
+	} else {
+		pcb_t* res = removeProcQ(&(s->s_procQ));
+
+		if (emptyProcQ(s->s_procQ))
+		{
+			semd_t* k = semd_h->s_next;
+
+			while (k->s_next != s) k = k->s_next;
+
+			k->s_next = s->s_next;
+
+			s->s_next = semdFree_h;
+			semdFree_h = s;
+		}
+
+		return res;
+	}
 }
