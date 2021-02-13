@@ -34,7 +34,6 @@ static semd_PTR searchAdd(int* semAdd)
 		p = p->s_next;
 	}
 
-
 	return NULL;
 }
 
@@ -60,6 +59,12 @@ pcb_PTR outBlocked(pcb_PTR p)
 {
 	semd_PTR s = searchAdd(p->p_semAdd);
 	
+	/* Not sure if this is actually needed */
+	if (s == NULL)
+	{
+		return NULL;
+	}
+	
 	return outProcQ(&(s->s_procQ), p);
 }
 
@@ -68,16 +73,17 @@ pcb_PTR headBlocked(int* semAdd)
 	semd_PTR sp = searchAdd(semAdd);
 	if(sp == NULL)
 		return NULL;
-	if(emptyProcQ(sp->s_procQ))
-		return headProcQ(sp->s_procQ);
-	else
+	else if(emptyProcQ(sp->s_procQ))
 		return NULL;
+	else
+		return headProcQ(sp->s_procQ);
 }
 
 int insertBlocked(int *semAdd, pcb_t *p){
   semd_PTR tmp = searchAdd(semAdd);       /* Fa la ricerca del semaforo con la chiave semAdd */
   if(tmp != NULL){                        /* Questo if gestisce il caso in cui il semaforo e' stato trovato */
     insertProcQ(&(tmp->s_procQ), p);
+    p->p_semAdd = semAdd;
     return 0;
   }
   if(semdFree_h == NULL) return 1;        /* Ritorna TRUE se la lista dei SEMD liberi o inutilizzati e' vuota */ 
@@ -89,8 +95,11 @@ int insertBlocked(int *semAdd, pcb_t *p){
   tmp->s_next = sliding_tmp->s_next;      /* A questo punto si aggiunge tmp nell'ASL fra sliding_tmp e sliding_tmp->s_next */ 
   sliding_tmp->s_next = tmp;
   tmp->s_semAdd = semAdd;                 /* L'inizializzazione dei campi di tmp */
+  p->p_semAdd = semAdd;
   tmp->s_procQ = mkEmptyProcQ();
   insertProcQ(&(tmp->s_procQ), p);
+
+
   return 0;
 }
 
@@ -101,21 +110,20 @@ pcb_t* removeBlocked(int *semAdd)
 	if (s == NULL)
 	{
 		return NULL;
-	} else {
-		pcb_t* res = removeProcQ(&(s->s_procQ));
-
-		if (emptyProcQ(s->s_procQ))
-		{
-			semd_t* k = semd_h->s_next;
-
-			while (k->s_next != s) k = k->s_next;
-
-			k->s_next = s->s_next;
-
-			s->s_next = semdFree_h;
-			semdFree_h = s;
-		}
-
-		return res;
 	}
+	pcb_t* res = removeProcQ(&(s->s_procQ));
+
+	if (emptyProcQ(s->s_procQ))
+	{
+		semd_t* k = semd_h->s_next;
+
+		while (k->s_next != s) k = k->s_next;
+
+		k->s_next = s->s_next;
+
+		s->s_next = semdFree_h;
+		semdFree_h = s;
+	}
+
+	return res;	
 }
