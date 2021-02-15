@@ -1,33 +1,23 @@
-# ProgettoSistemiOperativi2020-2021
+# PandOS - ProgettoSistemiOperativi2020-2021
 
-# N.B. questo readme al momento serve solo per aiutare in caso di problemi nell'inizializzazione
-# del emulatore (che verranno presto automatizzati dal make)
+**PandOS** è Evoluzione di Kaya O.S., a sua volta evoluzione di una lunga lista di sistemi operativi proposti a scopo didattico(HOCA, TINA, ICARO, etc). La sua arctettura è basata su sei livelli di astrazione, sul modello del sistema operativo THE proposto da Dijkstra in un suo articolo del 1968.
 
-Una volta Scaricato ed installato UMPS3 creare una cartella per contenere il progetto
+## Prerequisiti
 
-############################### Parte di git #########################################
+È necessario avere installato [umps3](https://github.com/virtualsquare/umps3). I makefile suppongono che i file siano installati in /usr, pa può succedere che sono installati in qualche altro posto. In tal caso è necessario modificare la riga 10 del makesettings dove è indicato il prefisso dei file umps3. 
 
-Creare una cartella dove verrà clonato il progetto e apriteci un terminale
+## Installazione
 
-Prendere l'url da git nella repo 
+Per far girare il progetto si deve solamente aprire la repo dal terminale e fare:
 
-fare il comando git clone <url>
+```bash
+$	make
+```
 
---------------------------------------------------------------------------------------
+Questo produrrà nella cartella i file seguenti: kernel, kernel.core.umps, kernel.stab.umps e la cartella build dove finiranno tutti file compilati *.o e *.d. A questo punto si deve creare un file .json che contiene le configurazioni(questo si fa facilmente da umps3). In fine si apre il umps3 col commando:
 
-############################## Crere le cartelle importanti ##########################
+```bash
+$	umps3
+```
 
-come prima cosa notare che se si porvasse a fare *make* nella cartella appena clonata 
-la compilazione fallirebbe ed è per questo che bisogna prendere qualche accorgimento
-
-1) aggiungere una cartella nominata "build" //dove finiranno tutti file compilati .o e .d
-
-2) creare una file .json dove verranno registrate le configurazioni 
-
-3) in fine se comoilando il file main.c da problemi probabilmente abbiamo un main vecchio
-
-	3.1) quindi bisong includere "proj_lib/proj_lib.h" 
-	
-	3.2) rimuovere sayHello() ed in caso si voglia avere un output 
-	     usare "term_puts("Hello\n");"
--------------------------------------------------------------------------------------
+Si carica il file .json e si preme *Power On*, si apre il terminale 0 se preme *Continue* per vedere l'output.
