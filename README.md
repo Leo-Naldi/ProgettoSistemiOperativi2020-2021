@@ -22,3 +22,7 @@ $	umps3
 ```
 
 Si carica il file .json e si preme *Power On*, si apre il terminale 0 se preme *Continue* per vedere l'output.
+
+## Note
+
+Il progetto è stato testato su Debian GNU/Linux 9 ed Ubuntu 20.04.2 LTS.
