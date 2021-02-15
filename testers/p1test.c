@@ -16,10 +16,6 @@
 #include <pandos_types.h>
 
 #include <umps3/umps/libumps.h>
-/*
-#include <pcb.h>
-#include <asl.h>
-*/
 
 #include "ProcQ.h"
 #include "ProcBasics.h"

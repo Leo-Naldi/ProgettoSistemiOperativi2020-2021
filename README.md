@@ -4,7 +4,8 @@
 
 ## Prerequisiti
 
-È necessario avere installato [umps3](https://github.com/virtualsquare/umps3). I makefile suppongono che i file siano installati in /usr, pa può succedere che sono installati in qualche altro posto. In tal caso è necessario modificare la riga 10 del makesettings dove è indicato il prefisso dei file umps3. 
+È necessario avere installato [umps3](https://github.com/virtualsquare/umps3). I makefile suppongono che i file siano installati in /usr o /usr/local, ma può succedere che sono installati in qualche altro posto. In tal caso è necessario settare a mano la variabile UMPS\_PREFIX del makesettings dove è indicato il prefisso dei file umps3. Si presuppone anche che il cross-compiler e il linker siano in path, se cosi' non fosse e' necessario aggiungere il path assoluto nella variabile CROSS\_TOOLS\_PREF, sempre in makesettings.
+Il Makefile mette anche a disposizione i target clean, che rimuove i file .o, kernel e .umps, e help, che stampa informazioni sull'utilizzo del makefile.
 
 ## Installazione
 

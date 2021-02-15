@@ -36,6 +36,8 @@ pcb_PTR allocPcb(void)
 	res->p_next_sib = NULL;
 	res->p_prev_sib = NULL;
 	res->p_semAdd = NULL;
+	memset(&(res->p_s), 0, sizeof(state_t));
+	memset(&(res->p_time), 0, sizeof(cpu_t));
 
 	return res;
 }

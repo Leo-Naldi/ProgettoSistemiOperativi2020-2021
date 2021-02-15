@@ -20,6 +20,7 @@ typedef unsigned int u32;
 
 typedef unsigned int size_t;
 
+/* Stampa str sul terminale 0 */
 void term_puts(const char *str);
 
 int term_putchar(char c);

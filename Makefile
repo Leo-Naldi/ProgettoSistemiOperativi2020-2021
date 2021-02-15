@@ -15,17 +15,15 @@ PHASE1_SRC := $(notdir $(wildcard phase1/*.c))
 PROJ_LIB_OBJS := $(patsubst %.c, $(BUILD_DIR)/%.o, $(PROJ_LIB_SRC))
 PHASE1_OBJS := $(patsubst %.c, $(BUILD_DIR)/%.o, $(PHASE1_SRC))
 
-# Prima o poi automatizzero' anche questo i swear
 UMPS_LIB_OBJS = $(BUILD_DIR)/crtso.o $(BUILD_DIR)/libumps.o
 
-# Quando sara' tutto implementato andra' cambiato col nome del test
 TARGET_TEST = p1test
 
 DEPS = $(PROJ_LIB_SRC:.c=.d) $(PHASE1_SRC:.c=.d) $(BUILD_DIR)/$(TARGET_TEST).d
 
 $(shell mkdir -p $(BUILD_DIR))
 
-.PHONY: all clean
+.PHONY: all clean help
 
 all : kernel.core.umps | $(BUILD_DIR)
 
@@ -45,7 +43,7 @@ $(BUILD_DIR)/%.o : %.c
 	$(CC) $(CFLAGS) $(OUTPUT_OPTION) -c -o $@ $<
 
 
-# Pattern rule per compilare i file lassembler
+# Pattern rule per compilare i file assembler
 $(BUILD_DIR)/%.o : %.S
 
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -57,17 +55,27 @@ clean:
 	-@rm -f  kernel.*.umps
 
 help: 
+	-@echo
+	-@echo Comandi disponibili:
+	-@echo
 	-@echo make \(all\): costrusce kernel, kernel.stab.umps e kernel.core.umps
 	-@echo make kernel: costrusce kernel ma non i file .umps \(non viene eseguito umps3-elf2umps\)
-	-@echo make clean: rimuove i file .o .umps e kernel
+	-@echo make clean: rimuove i file .o .umps e kernel \(ma non i file .d\)
 	-@echo 
-	-@echo I file intermedi \(.o\) sono contenuti nella directory $(BUILD_DIR), insieme ai file .d
+	-@echo Note\:
 	-@echo
-	-@echo se i file di umps non sono ne in /usr ne in /usr/local, occorre settare a mano la variabile \
+	-@echo I file oggetto \(.o\) sono contenuti nella directory $(BUILD_DIR), insieme ai file .d. La cartella \
+		$(BUILD_DIR) viene creata automaticamente.
+	-@echo
+	-@echo Se i file di umps non sono ne in /usr ne in /usr/local, occorre settare a mano la variabile \
 		UMPS_PREFIX nel file makesettings 
-	-@echo Se il cross-compiler \(mipsel-linux-gnu-gcc\) e il linker non sono in path occorre settare le variabili \
-		corrispondenti in makesettings
+	-@echo Se il cross-compiler \(mipsel-linux-gnu-gcc\) e il linker non sono in path occorre settare la variabile \
+		CROSS_TOOLS_PREF in makesettings.
+	-@echo
+	-@echo Le dependencies dei file vengono tracciate nei file .d, contenuti in $(BUILD_DIR), che vengono aggiornati \
+		ad ogni compilazione \(o creati se non presenti\).
+	-@echo
 
 
 
-# Al termine della compilazione i file .o saranno nella cartella build, mentre i file kernel e .umps saranno nella root del progetto
+# Al termine della compilazione i file .o e .d saranno nella cartella build, mentre i file kernel e .umps saranno nella root del progetto
