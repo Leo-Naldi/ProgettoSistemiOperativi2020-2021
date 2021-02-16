@@ -3,30 +3,27 @@
 /* Head pointer to single, linearly linked list of free semaphores*/
 static volatile semd_PTR semdFree_h;
 
-/* Head pointer to single, linearly linked
- * sorted list of Active Semaphores List
+/* Puntatore alla asl, rappresentata come una lista singolarmente linkata
+ * tramite il campo s_next e sortata tramite il campo s_semAdd. Ha due dummy
+ * nodes, uno in testa e uno in fondo, rispettivamente con s_semAdd uguali a 0
+ * e MAXINT.
  * */
 static volatile semd_PTR semd_h;
 
-/*
- * Cerca nella semd_h un semaforo con s_semAdd uguale
- * a semAdd.
- *
- * E' fatta assumendo che sem_h sia sortata in senso crescente
- * in base a s_semAdd come da specifiche, e abbia due guardie
- * una all'inizio e una alla fine (quella finale con s_semAdd = MAXINT).
- * */
-static semd_PTR searchAdd(int* semAdd)
+/* Cerca il semaforo precedente a quello con s_semAdd uguale a 
+ * semAdd nella asl e lo ritorna. Se un semaforo con un tale
+ * s_semAdd non e' presente ritorna NULL.  */
+static semd_PTR searchPrev(int* semAdd)
 {
-	semd_PTR p = semd_h->s_next; /* skippa la guardia */
+	semd_PTR p = semd_h;
 
-	while(p->s_semAdd != (int*) MAXINT)
+	while(p->s_next->s_semAdd != (int*) MAXINT)
 	{
-		if (p->s_semAdd == semAdd)
+		if (p->s_next->s_semAdd == semAdd)
 		{
 			return p;
 		}
-		else if (p->s_semAdd > semAdd)
+		else if (p->s_next->s_semAdd > semAdd)
 		{
 			return NULL;
 		}
@@ -35,6 +32,18 @@ static semd_PTR searchAdd(int* semAdd)
 	}
 
 	return NULL;
+}
+
+/*
+ * Cerca nella asl un semaforo con s_semAdd uguale
+ * a semAdd e lo ritorna. Se non presente ritorna 
+ * NULL. 
+ * */
+static semd_PTR searchAdd(int* semAdd)
+{
+	semd_PTR p = searchPrev(semAdd); /* skippa la guardia */
+	
+	return (p == NULL) ? NULL: p->s_next;
 }
 
 void initASL(void)
@@ -103,26 +112,33 @@ int insertBlocked(int *semAdd, pcb_t *p){
   return 0;
 }
 
+/* Chiama removeProcQ sulla coda dei processi bloccati
+ * del semaforo con s_semAdd uguale a semAdd.
+ * Se un tale semaforo non dovesse esistere o se la coda
+ * dovesse essere vuota ritorna NULL. Se la coda di processi
+ * bloccati risulta vuota dopo la chiamata di removeProcQ il
+ * semaforo viene rimosso dalla asl e reinserito nella Free List.
+ *
+ * Viene usata searchPrev al posto di searchAdd per evitare di dover
+ * scorrere la asl due volte nel caso in cui il semaforo vada
+ * elimitato */
 pcb_t* removeBlocked(int *semAdd)
 {
-	semd_t* s = searchAdd(semAdd);
+	semd_t* s = searchPrev(semAdd);
 
 	if (s == NULL)
 	{
 		return NULL;
 	}
-	pcb_t* res = removeProcQ(&(s->s_procQ));
+	semd_t* k = s->s_next;
+	pcb_t* res = removeProcQ(&(k->s_procQ));
 
-	if (emptyProcQ(s->s_procQ))
+	if (emptyProcQ(k->s_procQ))
 	{
-		semd_t* k = semd_h->s_next;
+		s->s_next = k->s_next;
 
-		while (k->s_next != s) k = k->s_next;
-
-		k->s_next = s->s_next;
-
-		s->s_next = semdFree_h;
-		semdFree_h = s;
+		k->s_next = semdFree_h;
+		semdFree_h = k;
 	}
 
 	return res;	

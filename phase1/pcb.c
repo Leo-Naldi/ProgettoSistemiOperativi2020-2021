@@ -9,7 +9,7 @@
  * */
 static volatile pcb_PTR pcbFree_h;
 
-
+/* Inserisce MAXPROC pcb nella free list, va chiamata una volta sola. */
 void initPcbs(void){
 	
 	static pcb_t pcbFree_table[MAXPROC];
@@ -24,6 +24,8 @@ void initPcbs(void){
 	
 }
 
+/* Alloca un pcb inizializza tutti i campi a NULL o 0 e lo ritorna.
+ * Se la pcb era vuota ritorna NULL */
 pcb_PTR allocPcb(void)
 {
 	if (pcbFree_h == NULL)
@@ -44,6 +46,7 @@ pcb_PTR allocPcb(void)
 	return res;
 }
 
+/* Ri inserisce il pcb dato nella free list */
 void freePcb(pcb_PTR p)
 {
 	pcb_PTR sup = pcbFree_h;
@@ -86,12 +89,14 @@ pcb_t* removeProcQ(pcb_t **tp){
   return toBeRemoved;
 }
 
+/* Rimuove p dalla coda puntata da tp, aggiornando tp se necessario. 
+ * Se p non e' presente nella coda ritorna NULL, altrimenti ritorna p. */
 pcb_t* outProcQ(pcb_t **tp, pcb_t *p){
 	
 	if (emptyProcQ(*tp)) return NULL;
 	
 	/* Rispettivamente puntatore per scorrere la coda 
-	 * e puntatore da eliminare */
+	 * e puntatore al pcb da eliminare */
 	pcb_t* k = (*tp)->p_next;
 	pcb_t* target = NULL;
 	
