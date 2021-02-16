@@ -1,4 +1,4 @@
-#include "ProcSem.h"
+#include "asl.h"
 
 /* Head pointer to single, linearly linked list of free semaphores*/
 static volatile semd_PTR semdFree_h;

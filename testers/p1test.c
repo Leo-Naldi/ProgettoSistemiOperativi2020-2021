@@ -17,10 +17,8 @@
 
 #include <umps3/umps/libumps.h>
 
-#include "ProcQ.h"
-#include "ProcBasics.h"
-#include "ProcTree.h"
-#include "ProcSem.h"
+#include "pcb.h"
+#include "asl.h"
 
 #define MAXPROC	20
 #define	MAXSEM	MAXPROC

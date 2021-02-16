@@ -5,7 +5,7 @@
 #include "pandos_types.h"
 #include "pandos_const.h"
 
-#include "ProcQ.h"
+#include "pcb.h"
 
 
 /* Inizializza la lista dei semdFree in modo da contenere tutti gli elementi
