@@ -27,11 +27,12 @@ PROJ_LIB_PATH = ./proj_lib
 PHASE1_PATH = ./phase1
 TESTERS_PATH = ./testers
 
-CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) -I$(UMPS_DATA) -I$(UMPS_INCLUDE) -I$(PROJ_LIB_PATH) -I$(PHASE1_PATH) 
+INC = -I$(UMPS_DATA) -I$(UMPS_INCLUDE) -I$(PROJ_LIB_PATH) -I$(PHASE1_PATH)
+
+CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) $(INC) 
 
 # Flag per creare e aggiornare le depedencies (.d files), contenuti nella stessa dir 
 # dei file oggetto
-OUTPUT_OPTION = -MMD -MP 
 
 VPATH = $(UMPS_DATA) $(UMPS_INCLUDE) $(PROJ_LIB_PATH) $(PHASE1_PATH) $(TESTERS_PATH)
 

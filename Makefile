@@ -2,37 +2,37 @@
 include makesettings
 
 # dir dove verranno messi i file oggetto e i file .d
-BUILD_DIR = ./build
+BUILD_DIR := ./build
+DEPS_DIR := ./deps
+BIN_DIR := ./bin
 
-# Lista dei source file di src
-PROJ_LIB_SRC := $(notdir $(wildcard proj_lib/*.c))
+PROJ_LIB_SRC := $(notdir $(wildcard $(PROJ_LIB_PATH)/*.c))
+PHASE1_SRC := $(notdir $(wildcard $(PHASE1_PATH)/*.c))
 
-# Lista dei source file in phase1
-PHASE1_SRC := $(notdir $(wildcard phase1/*.c))
+PROJECT_SRC := $(PROJ_LIB_SRC) $(PHASE1_SRC)
 
-# Sostituisce i .c con .o nei file sorgenti e aggiunge il prefisso $(BUILD_DIR)/ 
-# per generare automaticamente i nomi dei file oggetto
-PROJ_LIB_OBJS := $(patsubst %.c, $(BUILD_DIR)/%.o, $(PROJ_LIB_SRC))
-PHASE1_OBJS := $(patsubst %.c, $(BUILD_DIR)/%.o, $(PHASE1_SRC))
+PROJECT_OBJ := $(patsubst %.c, $(BUILD_DIR)/%.o, $(PROJECT_SRC)) 
+UMPS_LIB_OBJ := $(BUILD_DIR)/crtso.o $(BUILD_DIR)/libumps.o
 
-UMPS_LIB_OBJS = $(BUILD_DIR)/crtso.o $(BUILD_DIR)/libumps.o
+TARGET_TEST := p1test
 
-TARGET_TEST = p1test
-
-DEPS = $(PROJ_LIB_SRC:.c=.d) $(PHASE1_SRC:.c=.d) $(BUILD_DIR)/$(TARGET_TEST).d
+DEPS = $(patsubst %.c, $(DEPS_DIR)/%.d, $(PROJECT_SRC)) $(DEPS_DIR)/$(TARGET_TEST).d
+ 
 
 $(shell mkdir -p $(BUILD_DIR))
+$(shell mkdir -p $(DEPS_DIR))
+$(shell mkdir -p $(BIN_DIR))
 
 .PHONY: all clean help
 
-all : kernel.core.umps | $(BUILD_DIR)
+all : $(BIN_DIR)/kernel.core.umps
 
--include $(patsubst %, $(BUILD_DIR)/%, $(DEPS))
+include $(DEPS)
 
-kernel.core.umps : kernel 
+$(BIN_DIR)/kernel.core.umps : $(BIN_DIR)/kernel 
 	umps3-elf2umps -k $<
 
-kernel : $(BUILD_DIR)/$(TARGET_TEST).o $(PROJ_LIB_OBJS) $(UMPS_LIB_OBJS) $(PHASE1_OBJS)
+$(BIN_DIR)/kernel : $(BUILD_DIR)/$(TARGET_TEST).o $(PROJECT_OBJ) $(UMPS_LIB_OBJ)
 	
 	$(LD) -o $@ $^ $(LINK_FLAGS)
 
@@ -40,7 +40,7 @@ kernel : $(BUILD_DIR)/$(TARGET_TEST).o $(PROJ_LIB_OBJS) $(UMPS_LIB_OBJS) $(PHASE
 # Pattern rule per i file oggetto
 $(BUILD_DIR)/%.o : %.c 
 
-	$(CC) $(CFLAGS) $(OUTPUT_OPTION) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 
 # Pattern rule per compilare i file assembler
@@ -48,11 +48,17 @@ $(BUILD_DIR)/%.o : %.S
 
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+# Pattern rule per i requirement tracking
+$(DEPS_DIR)/%.d: %.c
+
+	@$(CC) -M $(INC) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@;\
+	rm -f $@.$$$$
+
 clean:
 
 	-@rm -f $(BUILD_DIR)/*.o
-	-@rm -f  kernel
-	-@rm -f  kernel.*.umps
+	-@rm -f  $(BIN_DIR)/*
 
 help: 
 	-@echo
@@ -64,18 +70,15 @@ help:
 	-@echo 
 	-@echo Note\:
 	-@echo
-	-@echo I file oggetto \(.o\) sono contenuti nella directory $(BUILD_DIR), insieme ai file .d. La cartella \
-		$(BUILD_DIR) viene creata automaticamente.
+	-@echo I file oggetto \(.o\) sono contenuti nella directory $(BUILD_DIR), i file .d nella cartella $(DEPS_DIR).\
+		Entrambe vengono generate automaticamente.
 	-@echo
 	-@echo Se i file di umps non sono ne in /usr ne in /usr/local, occorre settare a mano la variabile \
 		UMPS_PREFIX nel file makesettings 
 	-@echo Se il cross-compiler \(mipsel-linux-gnu-gcc\) e il linker non sono in path occorre settare la variabile \
 		CROSS_TOOLS_PREF in makesettings.
 	-@echo
-	-@echo Le dependencies dei file vengono tracciate nei file .d, contenuti in $(BUILD_DIR), che vengono aggiornati \
+	-@echo Le dependencies dei file vengono tracciate nei file .d, contenuti in $(DEPS_DIR), che vengono aggiornati \
 		ad ogni compilazione \(o creati se non presenti\).
 	-@echo
 
-
-
-# Al termine della compilazione i file .o e .d saranno nella cartella build, mentre i file kernel e .umps saranno nella root del progetto
