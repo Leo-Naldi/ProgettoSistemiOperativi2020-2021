@@ -79,10 +79,10 @@ pcb_PTR outBlocked(pcb_PTR p)
 
 pcb_PTR headBlocked(int* semAdd)
 {
-	semd_PTR sp = searchAdd(semAdd);
+	semd_PTR sp = searchAdd(semAdd); 	/* il semaforo non esiste */
 	if(sp == NULL)
 		return NULL;
-	else if(emptyProcQ(sp->s_procQ))
+	else if(emptyProcQ(sp->s_procQ))	/* la queue del semaforo è vuota */
 		return NULL;
 	else
 		return headProcQ(sp->s_procQ);

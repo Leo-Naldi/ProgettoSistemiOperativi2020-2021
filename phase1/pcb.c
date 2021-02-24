@@ -192,28 +192,28 @@ pcb_PTR removeChild(pcb_PTR p)
 
 pcb_PTR outChild(pcb_PTR p)
  {	
- 	if(p->p_prnt == NULL)
+ 	if(p->p_prnt == NULL) 			/* P è orfano quindi return NULL*/
  		return NULL;
  	pcb_PTR res;
- 	if(p->p_next_sib != NULL && p->p_prev_sib != NULL){
+ 	if(p->p_next_sib != NULL && p->p_prev_sib != NULL){ 		/* P ha sia frtello dx sia sx */
  		res = p;
  		res->p_next_sib->p_prev_sib = res->p_prev_sib;
  		res->p_prev_sib->p_next_sib = res->p_next_sib;
  		res->p_prnt = NULL;
  		res->p_next_sib = NULL;
  		res->p_prev_sib = NULL;
- 	} else if(p->p_prev_sib == NULL){
+ 	} else if(p->p_prev_sib == NULL){		/*  P ha solo fratelli a dx */
  		res = p;
  		res->p_prnt->p_child = res->p_next_sib;
  	 	res->p_prnt = NULL;
  	 	res->p_next_sib->p_prev_sib = NULL;
  	 	res->p_next_sib = NULL;
- 	} else if (p->p_next_sib == NULL){
+ 	} else if (p->p_next_sib == NULL){ 		/* P ha solo fratelli a sx*/
  		res = p;
  	 	res->p_prnt = NULL;
  		res->p_prev_sib->p_next_sib = NULL;
  		res->p_prev_sib = NULL;
- 	} else {
+ 	} else {					/* P non ha fratelli */
  		res = p;
  		res->p_prnt->p_child = NULL;
  		res->p_prnt = NULL;
