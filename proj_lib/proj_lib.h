@@ -20,6 +20,7 @@ typedef unsigned int u32;
 
 typedef unsigned int size_t;
 
+
 /* Stampa str sul terminale 0 */
 void term_puts(const char *str);
 
@@ -33,6 +34,10 @@ u32 tx_status(termreg_t *tp);
  * */
 void* memset(void* str, int c, size_t n);
 
+/*
+ * Copia n byte da src a dest, ne' src ne' dest possono essere NULL 
+ */
+void* memcpy(void* dest, const void* src, size_t n);
 
 #endif
 

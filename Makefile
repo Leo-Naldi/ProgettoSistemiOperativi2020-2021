@@ -8,8 +8,9 @@ BIN_DIR := ./bin
 
 PROJ_LIB_SRC := $(notdir $(wildcard $(PROJ_LIB_PATH)/*.c))
 PHASE1_SRC := $(notdir $(wildcard $(PHASE1_PATH)/*.c))
+PHASE2_SRC := $(notdir $(wildcard $(PHASE2_PATH)/*.c)) 
 
-PROJECT_SRC := $(PROJ_LIB_SRC) $(PHASE1_SRC)
+PROJECT_SRC := $(PROJ_LIB_SRC) $(PHASE1_SRC) $(PHASE2_SRC)
 
 PROJECT_OBJ := $(patsubst %.c, $(BUILD_DIR)/%.o, $(PROJECT_SRC)) 
 UMPS_LIB_OBJ := $(BUILD_DIR)/crtso.o $(BUILD_DIR)/libumps.o
@@ -52,7 +53,7 @@ $(BUILD_DIR)/%.o : %.S
 $(DEPS_DIR)/%.d: %.c
 
 	@$(CC) -M $(INC) $< > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@;\
+	sed 's,\($*\)\.o[ :]*,\$(BUILD_DIR)/\1.o $@ : ,g' < $@.$$$$ > $@;\
 	rm -f $@.$$$$
 
 clean:
