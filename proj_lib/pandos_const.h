@@ -178,5 +178,16 @@
 #define POOLSIZE (UPROCMAX * 2)
 /* End of Mikeyg constants */
 
+/* Project-defined constants */
+
+/* Indirizzi del Pass Up vector del processore 0 */
+#define PU_VEC0 { (unsigned int) PASSUPVECTOR, \
+		  (unsigned int) PASSUPVECTOR + 4, \
+		  (unsigned int) PASSUPVECTOR + 8, \
+		  (unsigned int) PASSUPVECTOR + 12, \
+		}
+
+/* Endo of Project-defined constants */
+
 
 #endif

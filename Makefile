@@ -15,7 +15,7 @@ PROJECT_SRC := $(PROJ_LIB_SRC) $(PHASE1_SRC) $(PHASE2_SRC)
 PROJECT_OBJ := $(patsubst %.c, $(BUILD_DIR)/%.o, $(PROJECT_SRC)) 
 UMPS_LIB_OBJ := $(BUILD_DIR)/crtso.o $(BUILD_DIR)/libumps.o
 
-TARGET_TEST := p1test
+TARGET_TEST := initial
 
 DEPS = $(patsubst %.c, $(DEPS_DIR)/%.d, $(PROJECT_SRC)) $(DEPS_DIR)/$(TARGET_TEST).d
  

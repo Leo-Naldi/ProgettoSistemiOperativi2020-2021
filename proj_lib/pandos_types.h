@@ -56,14 +56,5 @@ typedef struct semd_t {
 
 } semd_t, *semd_PTR;
 
-/* Struct per rappresentare un pass up vector */
-typedef struct PassUpVector
-{
-	unsigned int* tlb_refill_handler;     /* Indirizzo del gestore dei tbl-refill events */
-	unsigned int* tlb_refill_sp;          /* SP per il gestore dei tlb refill events */
-	unsigned int* ker_exception_handler;  /* Handler per le eccezioni */
-	unsigned int* ker_exception_sp;       /* SP da passare all'handler delle eccezioni */
-
-} pu_vec_t;
 
 #endif
