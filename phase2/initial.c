@@ -25,9 +25,9 @@ pcb_PTR current_proc;
 
 /* Probabilmente servono anche un'altro paio di variabili per il tempo di utilizzo della cpu */
 
-int dev_sem[DEV_NO];  /* Semafori per i device, andrebbero definite delle macro per mappare gli
-                         specifici device a indici di questi sem (in caso vanno messe in 
-                         pandos_const sotto a DEV_NO). */
+int dev_sem[DEVICECNT];  /* Semafori per i device, andrebbero definite delle macro per mappare gli
+                         specifici device a indici di questi sem (in caso vanno messe in fondo a
+                         pandos_const). Not sure se la macro DEVICECNT sia giusta o no */
 
 static void initKer()
 {
@@ -52,13 +52,13 @@ static void initKer()
     current_proc -> p_supportStruct = NULL;
     
     STST(&(current_proc->p_s)); /* Not sure if this is needed o se basta una memset */
-
 	RAMTOP(current_proc->p_s.reg_sp); /* Vedi pandos_const per la macro */
-    current_proc->p_s.pc_epc = current_proc->p_s.reg_t9 = (unsigned int) test;
-    
+    SET_PC(current_proc->p_s, test);
+
     /* macro definite in proj_lib.h */
     SET_KER_ON(current_proc->p_s);
     SET_ALL_INTERRUPT_ON(current_proc->p_s);
+    SET_PLT_ON(current_proc->p_s);
 
     insertProcQ(&ready_q, current_proc);
     current_proc = NULL;
@@ -81,6 +81,8 @@ int main()
 	
 
     /* TODO chiamare lo scheduler */
+    
+    LDIT(SYSTMR_RESET_VAL); 
 
 	term_puts("done.\n");
 	HALT();

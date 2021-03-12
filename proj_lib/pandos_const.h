@@ -180,8 +180,10 @@
 
 /* Project-defined constants */
 
-/* Dummy value, quando qualcuno sa quanti dispositivi ci sono lo metta qua */
-#define DEV_NO 49
+
+#define SYSTMR_RESET_VAL (SECOND / 10)
+
+#define KUPBITOFF 0xFFFFFFF7
 
 /* Endo of Project-defined constants */
 

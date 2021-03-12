@@ -2,7 +2,7 @@
 #define PROJ_LIB_H
 
 #include "umps/types.h"
-
+#include "umps/const.h"
 #include "umps/libumps.h"
 #include "umps/arch.h"
 
@@ -16,16 +16,18 @@
 #define CHAR_OFFSET        8
 #define TERM_STATUS_MASK   0xFF
 
-/* Ritorna il valore contenuto in status.ExcCause (aka la causa dell'eccezione)
- * Accede coprocessore CP0, non so se sia la cosa giusta */
-#define GET_EXC_CAUSE ((getCAUSE() & (unsigned int)0x0000007A) >> 2)
 
 /* Setta a 1 il bit KUp (non c per tenere conto della POP di LDST) */
-#define SET_KER_ON(STATE) ((STATE).status &= (unsigned int)0xFFFFFFFF7)
+#define SET_KER_ON(STATE) ((STATE).status &= KUPBITOFF)
 
-/* Setta a 1 il bit  e i bit della IM */
-#define SET_ALL_INTERRUPT_ON(STATE) ((STATE).status |= (unsigned int)0x0000FF02)
+/* Setta a 1 il bit IEP e i bit della IM */
+#define SET_ALL_INTERRUPT_ON(STATE) ((STATE).status |= IEPON | IMON)
 
+/* Enable il Process Local Timer, should always be called on a newly created process */
+#define SET_PLT_ON(STATE) ((STATE).status |= TEBITON)
+
+/* Setta il program counter (e quindi anche il registro t9) a PC_VAL */
+#define SET_PC(STATE, PC_VAL) ((STATE).pc_epc = (STATE).reg_t9 = (memaddr)(PC_VAL))
 
 typedef unsigned int u32;
 
