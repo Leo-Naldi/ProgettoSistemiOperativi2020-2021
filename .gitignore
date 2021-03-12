@@ -3,3 +3,4 @@ build/
 bin/
 *.json
 *.umps
+main.c

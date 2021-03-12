@@ -180,12 +180,8 @@
 
 /* Project-defined constants */
 
-/* Indirizzi del Pass Up vector del processore 0 */
-#define PU_VEC0 { (unsigned int) PASSUPVECTOR, \
-		  (unsigned int) PASSUPVECTOR + 4, \
-		  (unsigned int) PASSUPVECTOR + 8, \
-		  (unsigned int) PASSUPVECTOR + 12, \
-		}
+/* Dummy value, quando qualcuno sa quanti dispositivi ci sono lo metta qua */
+#define DEV_NO 49
 
 /* Endo of Project-defined constants */
 
