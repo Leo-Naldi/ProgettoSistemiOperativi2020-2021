@@ -60,7 +60,7 @@
 #define VSEMVIRT      20
 
 
-/* Status register constants */
+/* Status registers */
 #define ALLOFF      0x00000000
 #define USERPON     0x00000008
 #define IEPON       0x00000004
@@ -181,9 +181,10 @@
 /* Project-defined constants */
 
 
-#define SYSTMR_RESET_VAL (SECOND / 10)
+#define SYSTMR_RESET_VAL PSECOND
 
 #define KUPBITOFF 0xFFFFFFF7
+#define TEBITOFF (!TEBITON)
 
 /* Endo of Project-defined constants */
 

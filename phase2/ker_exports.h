@@ -18,6 +18,8 @@ extern int process_b;
 extern pcb_t* ready_q;
 extern pcb_PTR current_proc;
 
-extern int dev_sem[DEVICECNT];  /* TODO decidere il mapping per sti semafori, aka assiociare un istanza di 
+extern cpu_t tod_start;
+
+extern int dev_sem[DEVICECNT];  
 
 #endif

@@ -23,11 +23,14 @@
 /* Setta a 1 il bit IEP e i bit della IM */
 #define SET_ALL_INTERRUPT_ON(STATE) ((STATE).status |= IEPON | IMON)
 
-/* Enable il Process Local Timer, should always be called on a newly created process */
+/* Enable the Process Local Timer, should always be called on a newly created process */
 #define SET_PLT_ON(STATE) ((STATE).status |= TEBITON)
 
 /* Setta il program counter (e quindi anche il registro t9) a PC_VAL */
 #define SET_PC(STATE, PC_VAL) ((STATE).pc_epc = (STATE).reg_t9 = (memaddr)(PC_VAL))
+
+/* Scrive in X il valore del campo ExcCode del registro Cause di CP0  */
+#define GET_EXC_CODE(X) ((X) = (getCAUSE() & GETEXECCODE) >> CAUSESHIFT)
 
 typedef unsigned int u32;
 
@@ -52,6 +55,8 @@ void* memset(void* str, int c, size_t n);
  * tranne nel caso in cui n e' 0
  */
 void* memcpy(void* dest, const void* src, size_t n);
+
+
 
 #endif
 

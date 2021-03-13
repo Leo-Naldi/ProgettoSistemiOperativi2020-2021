@@ -24,6 +24,7 @@ pcb_t* ready_q;
 pcb_PTR current_proc;
 
 /* Probabilmente servono anche un'altro paio di variabili per il tempo di utilizzo della cpu */
+cpu_t tod_start; /* Tipo questa lmao */
 
 int dev_sem[DEVICECNT];  /* Semafori per i device, andrebbero definite delle macro per mappare gli
                          specifici device a indici di questi sem (in caso vanno messe in fondo a
@@ -82,8 +83,8 @@ int main()
 
     /* TODO chiamare lo scheduler */
     
-    LDIT(SYSTMR_RESET_VAL); 
-
+    LDIT(PSECOND); 
+    
 	term_puts("done.\n");
 	HALT();
 
