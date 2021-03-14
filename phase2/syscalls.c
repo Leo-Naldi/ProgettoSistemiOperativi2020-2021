@@ -5,6 +5,29 @@
  * come parametro, che viene salvato in CP0 prima di tirare l'eccezione.
  * Sould be easy to get ma una cosa alla volta. */
 
+static void syscall1(state_t *caller)
+{
+    /* NB in insertChild() il current proc è quello che ha chiamato la syscall (in teoria)*/
+    pcb_PTR child = allocPcb();
+    if(child == NULL) {
+        caller->reg_v0 = -1;
+        return;
+    }
+    memcpy(&(child->p_s), caller -> reg_a1, sizeof(state_t));
+
+    if(caller -> reg_a2 == NULL || caller -> reg_a2 == 0)
+        child -> p_supportStruct = NULL;
+    else
+        child -> p_supportStruct = (support_t*) caller -> reg_a2;
+
+    insertProcQ(&ready_q, child);
+    insertChild(current_proc, child);
+    child -> p_time = 0;
+    child -> p_semAdd = NULL;
+    process_count += 1;
+    caller -> reg_v0 = 0;
+}
+
 static void syscall4(state_t* caller) /* VERHOGEN */
 {
 	int* semaddr = (int*) caller->reg_a1;
@@ -45,5 +68,22 @@ static void syscall6(state_t* caller) /* GET CPU TIME */
 						aggiungere una funzione o qualcosa del genere */
 
 	caller->reg_v0 = current_proc->p_time;	
+}
+
+static void syscall7(state_t *caller)
+{
+    // controllare che il dev relativo al clock sia dev_sem[0]
+    cpu_t cur_time;
+
+    STCK(cur_time);
+    current_proc->p_time += (cur_time - tod_start);
+
+    STCK(tod_start);
+    SET_PC(*caller, getEPC()+4);
+    memcpy(&(current_proc->p_s), caller, sizeof(state_t));
+    dev_sem[0] -= 1;
+    insertBlocked(dev_sem, current_proc);
+    current_proc = NULL;
+    process_sb += 1;
 }
 

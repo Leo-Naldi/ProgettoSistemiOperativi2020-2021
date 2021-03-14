@@ -188,5 +188,6 @@
 
 /* Endo of Project-defined constants */
 
+#define SAVED_STATE ((state_t*) BIOSDATAPAGE)
 
 #endif
