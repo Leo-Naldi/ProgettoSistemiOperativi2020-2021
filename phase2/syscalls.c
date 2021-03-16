@@ -28,6 +28,15 @@ static void syscall1(state_t *caller)
     caller -> reg_v0 = 0;
 }
 
+static void syscall3(state_t* caller){/* PASSEREN */
+  int* semaddr = (int*) caller->reg_a1;
+  if(headBlocked(semaddr) != NULL){
+    insertBlocked(semaddr, current_proc);
+    current_proc = NULL;
+    process_sb += 1;
+  } 
+}
+
 static void syscall4(state_t* caller) /* VERHOGEN */
 {
 	int* semaddr = (int*) caller->reg_a1;
@@ -53,6 +62,15 @@ static void syscall4(state_t* caller) /* VERHOGEN */
 		insertProcQ(&ready_q, p);
 	}
 	
+}
+
+static void syscall5(state_t* caller){/* WAIT FOR IO DEVICE */
+  int intlNo = caller->reg_a1;  /* interrupt line */
+  int dnum = caller->reg_a2;    /* device number  */
+  insertBlocked(dev_sem, current_proc);
+  current_proc = NULL;
+  process_sb += 1;
+  /* ... */
 }
 
 static void syscall6(state_t* caller) /* GET CPU TIME */
