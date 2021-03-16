@@ -56,5 +56,29 @@ typedef struct semd_t {
 
 } semd_t, *semd_PTR;
 
+/* Project defined types */
+
+/* Organizzazione dei semafori associati ai device */
+typedef struct device_semaphores_list
+{
+	int sys_timer;               /* Semaforo del timer di sistema */
+	int proc_tymer;              /* Semaforo del Process Local Timer */
+
+	union
+	{
+		struct{
+			int disk_sem[DEVPERINT];     /* Semafori per le istanze dei device Disk */
+			int tape_sem[DEVPERINT];     /* Semafori per le istanze dei device Tape */
+			int ntw_sem[DEVPERINT];      /* Semafori per le istanze dei device di Network */
+			int printer_sem[DEVPERINT];  /* Semafori per le istanze dei device Printer */
+			int termr_sem[DEVPERINT];    /* Semafori per le istanze dei Terminali in Lettura */
+			int termw_sem[DEVPERINT];    /* Semafori per le istanze dei Terminali in Scrittura */ 
+		};
+		int sem_mat[6][DEVPERINT];       /* Alias per la memoria precedente per permettere accesso matrix style */
+	};
+} dev_sem_list_t;
+
+/* End of project defined types */
+
 
 #endif

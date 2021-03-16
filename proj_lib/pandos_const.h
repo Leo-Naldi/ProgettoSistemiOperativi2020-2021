@@ -180,14 +180,21 @@
 
 /* Project-defined constants */
 
-
+/* Deprecated */
 #define SYSTMR_RESET_VAL PSECOND
 
+/* Do status & this to set the KUp bit to 0 */
 #define KUPBITOFF 0xFFFFFFF7
-#define TEBITOFF (!TEBITON)
 
-/* Endo of Project-defined constants */
+/* Do status & this to set the TE bit to 0 */
+#define TEBITOFF (~TEBITON)
 
+/* Puntatore allo stato del processore prima che venisse 
+ * tirata l'eccezione (per capirci, quello che nelle funzioni
+ * e' induicatp come caller) */
 #define SAVED_STATE ((state_t*) BIOSDATAPAGE)
+
+
+/* End of Project-defined constants */
 
 #endif

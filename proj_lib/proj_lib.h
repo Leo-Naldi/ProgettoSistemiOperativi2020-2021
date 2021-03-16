@@ -32,6 +32,14 @@
 /* Scrive in X il valore del campo ExcCode del registro Cause di CP0  */
 #define GET_EXC_CODE(X) ((X) = (getCAUSE() & GETEXECCODE) >> CAUSESHIFT)
 
+/* True se PTR e' l-indirizzo di uno dei semafori di devices,
+ * DSL_OFFSET sara' l'offset dei semafori di sistema (che si assumono
+ * essere in un dev_sem_list_t) 
+ * i puntatori sono castati a char* per per evitare warning e poter sommare il sizeof
+ * correttamente */
+#define IS_DEV_SEMADDR(PTR, DSL_OFFSET) (((char*)(PTR) >= (char*)(DSL_OFFSET)) && \
+                                        ((char*)(PTR) < (char*)(DSL_OFFSET) + sizeof(dev_sem_list_t)))
+
 typedef unsigned int u32;
 
 typedef unsigned int size_t;

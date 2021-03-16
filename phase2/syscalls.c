@@ -13,7 +13,7 @@ static void syscall1(state_t *caller)
         caller->reg_v0 = -1;
         return;
     }
-    memcpy(&(child->p_s), caller -> reg_a1, sizeof(state_t));
+    memcpy(&(child->p_s), (state_t*) caller -> reg_a1, sizeof(state_t));
 
     if(caller -> reg_a2 == NULL || caller -> reg_a2 == 0)
         child -> p_supportStruct = NULL;
@@ -49,7 +49,7 @@ static void syscall4(state_t* caller) /* VERHOGEN */
 	{
 		/* NB : se cambia dev_sem deve cambiare anche sto if */
 
-		if ((semaddr >= dev_sem) && (semaddr < dev_sem + DEVICECNT))
+		if (IS_DEV_SEMADDR(semaddr, dev_sem))
 		{
 			/* era il semaforo di un device */
 			process_sb--;
@@ -90,7 +90,7 @@ static void syscall6(state_t* caller) /* GET CPU TIME */
 
 static void syscall7(state_t *caller)
 {
-    // controllare che il dev relativo al clock sia dev_sem[0]
+    /* controllare che il dev relativo al clock sia dev_sem[0]*/
     cpu_t cur_time;
 
     STCK(cur_time);
@@ -99,7 +99,7 @@ static void syscall7(state_t *caller)
     STCK(tod_start);
     SET_PC(*caller, getEPC()+4);
     memcpy(&(current_proc->p_s), caller, sizeof(state_t));
-    dev_sem[0] -= 1;
+    dev_sem->sys_timer -= 1;
     insertBlocked(dev_sem, current_proc);
     current_proc = NULL;
     process_sb += 1;

@@ -9,7 +9,7 @@
 #include "pcb.h"
 #include "asl.h"
 
-#include "scheduler.h"
+#include "ker_exports.h"
 
 extern void test();
 extern void uTLB_RefillHandler();
@@ -26,9 +26,8 @@ pcb_PTR current_proc;
 /* Probabilmente servono anche un'altro paio di variabili per il tempo di utilizzo della cpu */
 cpu_t tod_start; /* Tipo questa lmao */
 
-int dev_sem[DEVICECNT];  /* Semafori per i device, andrebbero definite delle macro per mappare gli
-                         specifici device a indici di questi sem (in caso vanno messe in fondo a
-                         pandos_const). Not sure se la macro DEVICECNT sia giusta o no */
+/* Semafori dei device, vedi pandos_types per lo struct */
+dev_sem_list_t* dev_sem;
 
 static void initKer()
 {
@@ -65,21 +64,14 @@ static void initKer()
     current_proc = NULL;
     process_count++;
 
-    /* setto ad ON (1) interrupt processor timer e kernel mode 
-    init -> p_s = ALLOFF;
-    init -> p_s |= ON << 2;
-    init -> p_s |= OFF << 3;
-    init -> p_s |= ON << 27;
-    */
-
-
+    memset(dev_sem, 0, sizeof(dev_sem_list_t)); /* Setta i valori di tutti i sem a 0,
+                                                   probabilmente alcuni andranno settati
+                                                   a 1 */
 }
 
 int main()
 {
-	initKer();
-	initScheduler();
-	
+	initKer();	
 
     /* TODO chiamare lo scheduler */
     

@@ -4,6 +4,7 @@
 #include <umps/types.h>
 #include <umps/const.h>
 #include <umps/libumps.h>
+#include <umps/cp0.h>
 
 #include "pandos_const.h"
 #include "pandos_types.h"
@@ -20,6 +21,12 @@ extern pcb_PTR current_proc;
 
 extern cpu_t tod_start;
 
-extern int dev_sem[DEVICECNT];  
+#define DEV_SEM_CNT sizeof(dev_sem_list_t)
+
+/* Semafori per device */
+extern dev_sem_list_t* dev_sem;  
+
+/* Fine Macro indici */
+
 
 #endif
