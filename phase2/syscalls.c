@@ -105,3 +105,22 @@ static void syscall7(state_t *caller)
     process_sb += 1;
 }
 
+void PassOrDie(state_t* caller, int exc_type)
+{
+    support_t* sup_puv; /* Support Level PassUp Vector */
+
+    if ((sup_puv = current_proc->p_supportStruct) == NULL)
+    {
+      /* Die */
+      /* syscall2(caller); */
+    }
+    else
+    {
+        /* Passup */
+        state_t* excp_state = &(sup_puv->sup_exceptState[exc_type]);  
+        context_t* sup_handler = &(sup_puv->sup_exceptContext[exc_type]);
+
+        memcpy(excp_state, caller, sizeof(state_t));
+        LDCXT(sup_handler->c_stackPtr, sup_handler->c_status, sup_handler->c_pc);
+    }
+}
