@@ -30,11 +30,15 @@ static void syscall1(state_t *caller)
 
 static void syscall3(state_t* caller){/* PASSEREN */
   int* semaddr = (int*) caller->reg_a1;
-  if(headBlocked(semaddr) != NULL){
+  (*semaddr)--;
+  if((*semaddr) <= 0){
     insertBlocked(semaddr, current_proc);
     current_proc = NULL;
-    process_sb += 1;
-  } 
+    if(IS_DEV_SEMADDR(semaddr, dev_sem))
+      process_sb += 1;
+    else
+      process_b += 1;
+  }
 }
 
 static void syscall4(state_t* caller) /* VERHOGEN */
@@ -67,10 +71,16 @@ static void syscall4(state_t* caller) /* VERHOGEN */
 static void syscall5(state_t* caller){/* WAIT FOR IO DEVICE */
   int intlNo = caller->reg_a1;  /* interrupt line */
   int dnum = caller->reg_a2;    /* device number  */
-  insertBlocked(dev_sem, current_proc);
+  if(intlNo < 7){
+    dev_sem.sem_mat[intlNo-3][dnum] -= 1;
+    insertBlocked(&dev_sem.sem_mat[intlNo-3][dnum], current_proc);
+  }else{
+    int termRead = caller->reg_a3;
+    dev_sem.sem_mat[5-termread][dnum] -= 1;
+    insertBlocked(&dev_sem.sem_mat[5-termread][dnum], current_proc);
+  }
   current_proc = NULL;
   process_sb += 1;
-  /* ... */
 }
 
 static void syscall6(state_t* caller) /* GET CPU TIME */
