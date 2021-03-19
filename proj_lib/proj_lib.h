@@ -29,9 +29,8 @@
 /* Setta il program counter (e quindi anche il registro t9) a PC_VAL */
 #define SET_PC(STATE, PC_VAL) ((STATE).pc_epc = (STATE).reg_t9 = (memaddr)(PC_VAL))
 
-/* Scrive in X il valore del campo ExcCode del registro Cause di CP0  */
-#define GET_EXC_CODE(X) ((X) = (getCAUSE() & GETEXECCODE) >> CAUSESHIFT)
-
+/* Ritorna tt se il bit KUP == 1, ff altrimenti*/
+#define IS_USER_MODE(x) ((x) & KUPBITON)
 /* True se PTR e' l-indirizzo di uno dei semafori di devices,
  * DSL_OFFSET sara' l'offset dei semafori di sistema (che si assumono
  * essere in un dev_sem_list_t) 
