@@ -15,7 +15,7 @@ static void syscall1(state_t *caller)
     }
     memcpy(&(child->p_s), (state_t*) caller -> reg_a1, sizeof(state_t));
 
-    if(caller -> reg_a2 == NULL || caller -> reg_a2 == 0)
+    if((state_t*) caller -> reg_a2 == NULL || caller -> reg_a2 == 0)
         child -> p_supportStruct = NULL;
     else
         child -> p_supportStruct = (support_t*) caller -> reg_a2;
@@ -26,6 +26,50 @@ static void syscall1(state_t *caller)
     child -> p_semAdd = NULL;
     process_count += 1;
     caller -> reg_v0 = 0;
+}
+
+static void syscall2(state_t* caller)
+{
+    /* Stacca il padre */
+    if (current_proc->p_prnt != NULL)
+    {
+        outChild(current_proc);
+    }
+
+    /* Itera fino all'ultimo figlio */
+    pcb_t* child_queue = mkEmptyProcQ();
+
+    insertProcQ(&child_queue, current_proc);
+    pcb_t* k;
+
+    while (!emptyProcQ(child_queue))
+    {
+        k = removeProcQ(&child_queue);
+
+        while (!emptyChild(k))
+        {
+            insertProcQ(&child_queue, removeChild(k));
+        }
+
+        if (k->p_semAdd != NULL)
+        {
+            if (IS_DEV_SEMADDR(k->p_semAdd, dev_sem))
+            {
+                process_sb--;
+            }
+            else
+            {
+                process_b--;
+            }
+
+            outBlocked(k);
+            (*(k->p_semAdd))++;
+        }
+
+        freePcb(k);
+    }
+
+    current_proc = NULL;
 }
 
 static void syscall3(state_t* caller){/* PASSEREN */
@@ -115,14 +159,19 @@ static void syscall7(state_t *caller)
     process_sb += 1;
 }
 
+static void syscall8(state_t* caller)
+{
+   /* Se current_proc->  */ 
+    caller->reg_v0 = (unsigned int) current_proc->p_supportStruct;
+}
+
 void PassOrDie(state_t* caller, int exc_type)
 {
     support_t* sup_puv; /* Support Level PassUp Vector */
 
     if ((sup_puv = current_proc->p_supportStruct) == NULL)
     {
-      /* Die */
-      /* syscall2(caller); */
+        syscall2(caller);
     }
     else
     {
