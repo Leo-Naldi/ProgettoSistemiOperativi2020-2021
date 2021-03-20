@@ -183,3 +183,37 @@ void PassOrDie(state_t* caller, int exc_type)
         LDCXT(sup_handler->c_stackPtr, sup_handler->c_status, sup_handler->c_pc);
     }
 }
+
+void syscall_handler(state_t* caller){
+  unsigned int a0 = caller->reg_v0;
+  switch(a0){
+    case 1:
+      syscall1(caller);
+      break;
+    case 2:
+      syscall2(caller);
+      break;
+    case 3:
+      syscall3(caller);
+      break;
+    case 4:
+      syscall4(caller);
+      break;
+    case 5:
+      syscall5(caller);
+      break;
+    case 6:
+      syscall6(caller);
+      break;
+    case 7:
+      syscall7(caller);
+      break;
+    case 8:
+      syscall8(caller);
+      break;
+    default:
+      if(a0 >= 9)
+	PassOrDie(caller, GENERALEXCEPT);
+      break;
+  }
+}
