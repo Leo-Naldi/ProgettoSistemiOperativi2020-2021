@@ -1,17 +1,14 @@
-/*
- * praticamente devo controllare se eravamo in kernel mode KUp
- * in base a Code.ExceCode richiamo un Handler differente
- */
+#include <umps/libumps.h>
 
 void exceHandler(){
     state_t* caller = SAVED_STATE;
     switch (CAUSE_GET_EXCCODE(getCAUSE())) {
         case EXC_INT:
-            // interrupt handler
+            interrupt_handler(caller);
             break;
         case EXC_MOD: case EXC_TLBL: case EXC_TLBS:
             PassOrDie(caller, PGFAULTEXCEPT)
-                break;
+            break;
         case EXC_SYS:
             syscall_handler(caller);
             break;
@@ -19,5 +16,5 @@ void exceHandler(){
             case EXC_BP: case EXC_RI: case EXC_CPU: case EXC_OV:
                 PassOrDie(caller, GENERALEXCEPT)
             break;
-    }
+        }
 }
