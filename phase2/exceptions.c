@@ -10,21 +10,14 @@ void exceHandler(){
             // interrupt handler
             break;
         case EXC_MOD: case EXC_TLBL: case EXC_TLBS:
-            //TLB Handler (Pass Up or DIe)
+            PassOrDie(caller, PGFAULTEXCEPT)
                 break;
         case EXC_SYS:
-            // Controlla KUP && registro a0 di caller ho un 0..8
-            //in caso settare excode to RI e chiamare trap handler (GOTO ???????)
-            // Syscall Handler
+            syscall_handler(caller);
             break;
         case EXC_ADEL: case EXC_ADES: case EXC_IDE: case EXC_DBE:
             case EXC_BP: case EXC_RI: case EXC_CPU: case EXC_OV:
-                // Standard Pass Up or Die
-            break;
-        default:
-
+                PassOrDie(caller, GENERALEXCEPT)
             break;
     }
-
-    // SCHEDULER()
 }
