@@ -24,7 +24,7 @@ extern cpu_t tod_start;
 #define DEV_SEM_CNT sizeof(dev_sem_list_t)
 
 /* Semafori per device */
-extern dev_sem_list_t* dev_sem;  
+extern dev_sem_list_t* dev_sem;
 
 /* Fine Macro indici */
 

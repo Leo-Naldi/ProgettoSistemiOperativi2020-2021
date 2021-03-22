@@ -62,7 +62,6 @@ typedef struct semd_t {
 typedef struct device_semaphores_list
 {
 	int sys_timer;               /* Semaforo del timer di sistema */
-	int proc_tymer;              /* Semaforo del Process Local Timer */
 
 	union
 	{
@@ -71,8 +70,8 @@ typedef struct device_semaphores_list
 			int tape_sem[DEVPERINT];     /* Semafori per le istanze dei device Tape */
 			int ntw_sem[DEVPERINT];      /* Semafori per le istanze dei device di Network */
 			int printer_sem[DEVPERINT];  /* Semafori per le istanze dei device Printer */
-			int termr_sem[DEVPERINT];    /* Semafori per le istanze dei Terminali in Lettura */
 			int termw_sem[DEVPERINT];    /* Semafori per le istanze dei Terminali in Scrittura */ 
+			int termr_sem[DEVPERINT];    /* Semafori per le istanze dei Terminali in Lettura */
 		};
 		int sem_mat[6][DEVPERINT];       /* Alias per la memoria precedente per permettere accesso matrix style */
 	};

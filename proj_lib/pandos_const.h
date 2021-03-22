@@ -75,7 +75,9 @@
 #define LOCALTIMERINT  0x00000200
 #define TIMERINTERRUPT 0x00000400
 #define DISKINTERRUPT  0x00000800
-#define FLASHINTERRUPT 0x00001000
+#define FLASHINTERRUPT 0x00001000  /* Flash e' al posto di tape for some fekin reason */
+#define TAPEINTERRUPT  FLASHINTERRUPT
+#define NTWRKINTERRUPT 0x00002000  /* Questo l'ho aggiunto io */
 #define PRINTINTERRUPT 0x00004000
 #define TERMINTERRUPT  0x00008000
 #define IOINTERRUPTS   0
@@ -194,6 +196,18 @@
  * tirata l'eccezione (per capirci, quello che nelle funzioni
  * e' induicatp come caller) */
 #define SAVED_STATE ((state_t*) BIOSDATAPAGE)
+
+#define DEVINTBITS (DISKINTERRUPT | TAPEINTERRUPT | NTWRKINTERRUPT | PRINTINTERRUPT | TERMINTERRUPT)
+
+/* Device registers/bitmap constants [5.1-pops], sono abbastanza sicuro che siano 
+ * gia definite da qualche parte, ma non le trovo. In caso fatemi sapere 
+ * La macro per ottenere l'indirizzo del devreg avendo lineNo e devNo e'
+ * in proj_lib.h (copia incollata sempre da 5.1-pops) */
+
+#define DEVREG_BASE 0x10000054
+
+#define INSTALLED_DEV_BITMAP 0x1000002C
+#define INTERRUPT_DEV_BITMAP 0x10000040
 
 
 /* End of Project-defined constants */

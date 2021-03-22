@@ -31,6 +31,7 @@
 
 /* Ritorna tt se il bit KUP == 1, ff altrimenti*/
 #define IS_USER_MODE(x) ((x) & KUPBITON)
+
 /* True se PTR e' l-indirizzo di uno dei semafori di devices,
  * DSL_OFFSET sara' l'offset dei semafori di sistema (che si assumono
  * essere in un dev_sem_list_t) 
@@ -38,6 +39,10 @@
  * correttamente */
 #define IS_DEV_SEMADDR(PTR, DSL_OFFSET) (((char*)(PTR) >= (char*)(DSL_OFFSET)) && \
                                         ((char*)(PTR) < (char*)(DSL_OFFSET) + sizeof(dev_sem_list_t)))
+
+#define GET_DEVREG_ADDR(LINE_NO, DEV_NO) (DEVREG_BASE + ((LINE_NO) - 3) * 0x80 +  \
+                                            (DEV_NO * 0x10))
+
 
 typedef unsigned int u32;
 
@@ -62,8 +67,6 @@ void* memset(void* str, int c, size_t n);
  * tranne nel caso in cui n e' 0
  */
 void* memcpy(void* dest, const void* src, size_t n);
-
-
 
 #endif
 
