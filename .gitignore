@@ -4,3 +4,4 @@ bin/
 *.json
 *.umps
 main.c
+./phase2/debugging_sceduler.h

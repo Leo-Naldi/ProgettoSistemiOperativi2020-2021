@@ -63,3 +63,12 @@ void* memcpy(void* dest, const void* src, size_t n)
 }
 
 
+void update_cpu_usage(pcb_t* p, cpu_t* starting_time)
+{
+	cpu_t ct;
+	STCK(ct);
+
+	p->p_time += (ct - (*starting_time));
+
+	STCK(*starting_time);
+}

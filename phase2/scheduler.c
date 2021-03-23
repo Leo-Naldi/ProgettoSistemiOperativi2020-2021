@@ -3,10 +3,15 @@
 
 void initScheduler() {}
 
+#ifndef DEBUGGER_ACTIVE
+
 void scheduler() 
 {
-	
-	if ((current_proc = removeProcQ(&ready_q)) != NULL)
+	if (current_proc != NULL)
+	{
+		LDST(current_proc->p_s);
+	}
+	else if((current_proc = removeProcQ(&ready_q)) != NULL)
 	{
 		SET_PLT_ON(current_proc->p_s); /* Enable il PLT in caso non lo sia */
 		setTIMER(TIMESLICE); /* set PLT. spero. */
@@ -34,3 +39,9 @@ void scheduler()
 		PANIC();
 	}
 }
+
+#else
+
+#include "debugging_scheduler.h"
+
+#endif

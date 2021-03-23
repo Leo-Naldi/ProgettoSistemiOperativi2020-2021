@@ -76,6 +76,7 @@ static void syscall3(state_t* caller){/* PASSEREN */
   int* semaddr = (int*) caller->reg_a1;
   (*semaddr)--;
   if((*semaddr) <= 0){
+    SET_PC(current_proc->p_s, getEPC() + WORD_SIZE);
     insertBlocked(semaddr, current_proc);
     current_proc = NULL;
     if(IS_DEV_SEMADDR(semaddr, dev_sem))
@@ -123,6 +124,7 @@ static void syscall5(state_t* caller){/* WAIT FOR IO DEVICE */
     dev_sem.sem_mat[5-termread][dnum] -= 1;
     insertBlocked(&dev_sem.sem_mat[5-termread][dnum], current_proc);
   }
+  update_cpu_usage(current_proc, &tod_start);
   current_proc = NULL;
   process_sb += 1;
 }
@@ -130,29 +132,18 @@ static void syscall5(state_t* caller){/* WAIT FOR IO DEVICE */
 static void syscall6(state_t* caller) /* GET CPU TIME */
 {
 	/* In realta' current_proc e caller dovrebbero essere la stessa cosa */
-	cpu_t cur_time;
-
-	STCK(cur_time); /* Legge il Time-Of-Day Clock e lo scrive in cur_time */
-	current_proc->p_time += (cur_time - tod_start);
-
-	STCK(tod_start); /* Ogni volta che il current_proc->p_time viene aggiornato,
-						Si deve anche resettare tod_start. Probabilemte sar' piu' comodo 
-						aggiungere una funzione o qualcosa del genere */
-
+    update_cpu_usage(current_proc, &tod_start);
 	caller->reg_v0 = current_proc->p_time;	
 }
 
 static void syscall7(state_t *caller)
 {
     /* controllare che il dev relativo al clock sia dev_sem[0]*/
-    cpu_t cur_time;
+    update_cpu_usage(current_proc, &tod_start);
 
-    STCK(cur_time);
-    current_proc->p_time += (cur_time - tod_start);
-
-    STCK(tod_start);
-    SET_PC(*caller, getEPC()+4);
     memcpy(&(current_proc->p_s), caller, sizeof(state_t));
+    SET_PC(current_proc->p_s, getEPC() + WORD_SIZE);
+
     dev_sem->sys_timer -= 1;
     insertBlocked(dev_sem, current_proc);
     current_proc = NULL;

@@ -11,10 +11,17 @@ void exceHandler(){
             break;
         case EXC_SYS:
             syscall_handler(caller);
+            SET_PC(*caller, getEPC() + WORD_SIZE);
             break;
         case EXC_ADEL: case EXC_ADES: case EXC_IDE: case EXC_DBE:
             case EXC_BP: case EXC_RI: case EXC_CPU: case EXC_OV:
                 PassOrDie(caller, GENERALEXCEPT)
             break;
         }
+
+    if (current_proc != NULL)
+    {
+        memcpy(&(current_proc->p_s), caller, sizeof(state_t));
+    }
+    scheduler();
 }

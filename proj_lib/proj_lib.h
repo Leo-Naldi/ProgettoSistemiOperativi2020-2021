@@ -6,6 +6,10 @@
 #include "umps/libumps.h"
 #include "umps/arch.h"
 
+#include "pandos_const.h"
+#include "pandos_types.h"
+
+
 #define ST_READY           1
 #define ST_BUSY            3
 #define ST_TRANSMITTED     5
@@ -67,6 +71,8 @@ void* memset(void* str, int c, size_t n);
  * tranne nel caso in cui n e' 0
  */
 void* memcpy(void* dest, const void* src, size_t n);
+
+void update_cpu_usage(pcb_t* p, cpu_t* starting_time);
 
 #endif
 
