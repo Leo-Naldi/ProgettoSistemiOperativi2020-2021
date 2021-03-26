@@ -71,8 +71,57 @@ void interrupt_handler(state_t* caller)
         *semadd = 0;
 
     }
-    else
-    {
-        /* Non-timer interrups */
+    else{
+      /* Non-timer interrupts */
+      unsigned int IP = (cause >> 7) & 255;
+      unsigned int intln = 0, tmp = IP;
+      while(!(tmp%2)){
+	if(tmp == 0) return;
+	tmp = tmp >> 1;
+	intln += 1;
+      }
+      unsigned int *devword = (unsigned int*)(0x1000.0040 + 0x04 * (intln - 3));
+      unsigned int devno = 0, tmp = *devword;
+      unsigned int tran = 0;
+      /* da aggiungere precedenza di termread */
+      if(intln != 7){
+	while(!(tmp%2)){
+	  if(tmp == 0) return;
+	  tmp = tmp >> 1;
+	  devno += 1;
+	}
+      }else{
+	unsigned int devno_recv = 100;
+	while(tmp!=0){
+	  if(tmp%2){
+	    unsigned int *devAddrBase = 0x1000.0054 + ((intln - 3) * 0x80) + (devno * 0x10);
+	    unsigned int reg_status_recv = *devAddrBase;
+	    unsigned int reg_status_tran = *(devAddrBase + 0x8);
+	    if((reg_status_tran & 255) == 5){ tran = 1; break;}
+	    else if(devno_recv == 100) devno_recv = devno;
+	  }
+	  tmp = tmp >> 1;
+	  devno += 1;
+	}
+	if(!tran) devno = devno_recv;
+      }
+      unsigned int status = caller->status;
+      unsigned int IEc = status % 2, IM = (status>>(7+intln)) % 2;
+      if(!(IEc & IM)) return;
+      unsigned int *devAddrBase = 0x1000.0054 + ((intln - 3) * 0x80) + (devno * 0x10);
+      unsigned int reg_status = *(devAddrBase + tran * 0x8);
+      *(devAddrBase + 0x4) = ACK;
+      /* V operation */
+      int* semaddr = NULL;
+      if(intln < 7) semaddr = &dev_sem.sem_mat[intln-3][devno];
+      else semaddr = &dev_sem.sem_mat[5-tran][devno];
+      pcb_t* p = removeBlocked(semaddr);
+      (*semaddr)++;
+      if(p != NULL){
+	process_sb--;
+	p->p_s.s_v0 = reg_status;
+	insertProcQ(&ready_q, p);
+      }
+      /* LDST */
     }
 }
