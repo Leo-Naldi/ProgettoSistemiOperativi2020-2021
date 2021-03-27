@@ -13,6 +13,10 @@
 #include "pcb.h"
 #include "asl.h"
 
+#include "scheduler.h"
+#include "syscalls.h"
+#include "interrupts.h"
+
 extern int process_count;
 extern int process_sb;
 extern int process_b;

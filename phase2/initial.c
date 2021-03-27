@@ -28,6 +28,7 @@ pcb_PTR current_proc;
 cpu_t tod_start; /* Tipo questa lmao */
 
 /* Semafori dei device, vedi pandos_types per lo struct */
+dev_sem_list_t ds;
 dev_sem_list_t* dev_sem;
 
 static void initKer()
@@ -65,17 +66,16 @@ static void initKer()
     current_proc = NULL;
     process_count++;
 
-    memset(dev_sem, 0, sizeof(dev_sem_list_t)); /* Setta i valori di tutti i sem a 0,
+    memset(&ds, 0, sizeof(dev_sem_list_t)); /* Setta i valori di tutti i sem a 0,
                                                    probabilmente alcuni andranno settati
                                                    a 1 */
+    dev_sem = &ds;
 }
 
 int main()
 {
 	initKer();	
-
-    /* TODO chiamare lo scheduler */
-    
+ 
     LDIT(PSECOND); 
     
 	term_puts("done.\n");

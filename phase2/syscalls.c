@@ -5,6 +5,18 @@
  * come parametro, che viene salvato in CP0 prima di tirare l'eccezione.
  * Sould be easy to get ma una cosa alla volta. */
 
+/*
+ * Returning procedure for blocking syscalls.
+ * */
+static void ret_blocking(state_t* caller)
+{ 
+    update_cpu_usage(current_proc, &tod_start);
+    memcpy(&(current_proc->p_s), caller, sizeof(state_t));
+    current_proc = NULL;
+
+    scheduler();
+}
+
 static void syscall1(state_t *caller)
 {
     /* NB in insertChild() il current proc è quello che ha chiamato la syscall (in teoria)*/
@@ -26,6 +38,8 @@ static void syscall1(state_t *caller)
     child -> p_semAdd = NULL;
     process_count += 1;
     caller -> reg_v0 = 0;
+
+    LDST(caller);
 }
 
 static void syscall2(state_t* caller)
@@ -70,46 +84,55 @@ static void syscall2(state_t* caller)
     }
 
     current_proc = NULL;
+
+    scheduler();
 }
 
 static void syscall3(state_t* caller){/* PASSEREN */
   int* semaddr = (int*) caller->reg_a1;
   (*semaddr)--;
-  if((*semaddr) <= 0){
-    SET_PC(current_proc->p_s, getEPC() + WORD_SIZE);
+  if((*semaddr) < 0){
+
     insertBlocked(semaddr, current_proc);
-    current_proc = NULL;
     if(IS_DEV_SEMADDR(semaddr, dev_sem))
       process_sb += 1;
     else
       process_b += 1;
+    
+    ret_blocking(caller);
   }
+
+  LDST(caller);
 }
 
 static void syscall4(state_t* caller) /* VERHOGEN */
 {
 	int* semaddr = (int*) caller->reg_a1;
 	
-	pcb_t* p = removeBlocked(semaddr);
-
 	(*semaddr)++;
+	
+    if (*semaddr <= 0) /* Someone was waiting */
+    {
+        pcb_t* p = removeBlocked(semaddr);
+        if (p != NULL)
+        {
+            /* NB : se cambia dev_sem deve cambiare anche sto if */
 
-	if (p != NULL)
-	{
-		/* NB : se cambia dev_sem deve cambiare anche sto if */
+            if (IS_DEV_SEMADDR(semaddr, dev_sem))
+            {
+                /* era il semaforo di un device */
+                process_sb--;
+            }
+            else
+            {
+                process_b--;
+            }
 
-		if (IS_DEV_SEMADDR(semaddr, dev_sem))
-		{
-			/* era il semaforo di un device */
-			process_sb--;
-		}
-		else
-		{
-			process_b--;
-		}
+            insertProcQ(&ready_q, p);
+        }
+    }
 
-		insertProcQ(&ready_q, p);
-	}
+    LDST(caller);
 	
 }
 
@@ -117,43 +140,43 @@ static void syscall5(state_t* caller){/* WAIT FOR IO DEVICE */
   int intlNo = caller->reg_a1;  /* interrupt line */
   int dnum = caller->reg_a2;    /* device number  */
   if(intlNo < 7){
-    dev_sem.sem_mat[intlNo-3][dnum] -= 1;
-    insertBlocked(&dev_sem.sem_mat[intlNo-3][dnum], current_proc);
+    dev_sem->sem_mat[intlNo-3][dnum] -= 1;
+    insertBlocked(&dev_sem->sem_mat[intlNo-3][dnum], current_proc);
   }else{
     int termRead = caller->reg_a3;
-    dev_sem.sem_mat[5-termread][dnum] -= 1;
-    insertBlocked(&dev_sem.sem_mat[5-termread][dnum], current_proc);
+    dev_sem->sem_mat[5-termRead][dnum] -= 1;
+    insertBlocked(&dev_sem->sem_mat[5-termRead][dnum], current_proc);
   }
-  update_cpu_usage(current_proc, &tod_start);
-  current_proc = NULL;
   process_sb += 1;
+
+  ret_blocking(caller);
 }
 
 static void syscall6(state_t* caller) /* GET CPU TIME */
 {
 	/* In realta' current_proc e caller dovrebbero essere la stessa cosa */
     update_cpu_usage(current_proc, &tod_start);
-	caller->reg_v0 = current_proc->p_time;	
+	caller->reg_v0 = current_proc->p_time;
+    LDST(caller);
 }
 
 static void syscall7(state_t *caller)
 {
     /* controllare che il dev relativo al clock sia dev_sem[0]*/
-    update_cpu_usage(current_proc, &tod_start);
-
-    memcpy(&(current_proc->p_s), caller, sizeof(state_t));
-    SET_PC(current_proc->p_s, getEPC() + WORD_SIZE);
 
     dev_sem->sys_timer -= 1;
-    insertBlocked(dev_sem, current_proc);
-    current_proc = NULL;
+    insertBlocked(&(dev_sem->sys_timer), current_proc);
     process_sb += 1;
+  
+    ret_blocking(caller);
 }
 
 static void syscall8(state_t* caller)
 {
    /* Se current_proc->  */ 
     caller->reg_v0 = (unsigned int) current_proc->p_supportStruct;
+
+    LDST(caller);
 }
 
 void PassOrDie(state_t* caller, int exc_type)
