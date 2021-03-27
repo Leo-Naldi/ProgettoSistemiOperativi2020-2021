@@ -80,8 +80,8 @@ void interrupt_handler(state_t* caller)
 	tmp = tmp >> 1;
 	intln += 1;
       }
-      unsigned int *devword = (unsigned int*)(0x1000.0040 + 0x04 * (intln - 3));
-      unsigned int devno = 0, tmp = *devword;
+      unsigned int *devword = (unsigned int*)(0x10000040 + 0x04 * (intln - 3));
+      unsigned int devno = 0; tmp = *devword;
       unsigned int tran = 0;
       /* da aggiungere precedenza di termread */
       if(intln != 7){
@@ -94,7 +94,7 @@ void interrupt_handler(state_t* caller)
 	unsigned int devno_recv = 100;
 	while(tmp!=0){
 	  if(tmp%2){
-	    unsigned int *devAddrBase = 0x1000.0054 + ((intln - 3) * 0x80) + (devno * 0x10);
+	    unsigned int *devAddrBase = 0x10000054 + ((intln - 3) * 0x80) + (devno * 0x10);
 	    unsigned int reg_status_recv = *devAddrBase;
 	    unsigned int reg_status_tran = *(devAddrBase + 0x8);
 	    if((reg_status_tran & 255) == 5){ tran = 1; break;}
@@ -108,18 +108,18 @@ void interrupt_handler(state_t* caller)
       unsigned int status = caller->status;
       unsigned int IEc = status % 2, IM = (status>>(7+intln)) % 2;
       if(!(IEc & IM)) return;
-      unsigned int *devAddrBase = 0x1000.0054 + ((intln - 3) * 0x80) + (devno * 0x10);
+      unsigned int *devAddrBase = 0x10000054 + ((intln - 3) * 0x80) + (devno * 0x10);
       unsigned int reg_status = *(devAddrBase + tran * 0x8);
       *(devAddrBase + 0x4) = ACK;
       /* V operation */
       int* semaddr = NULL;
-      if(intln < 7) semaddr = &dev_sem.sem_mat[intln-3][devno];
-      else semaddr = &dev_sem.sem_mat[5-tran][devno];
+      if(intln < 7) semaddr = &(dev_sem->sem_mat[intln-3][devno]);
+      else semaddr = &(dev_sem->sem_mat[5-tran][devno]);
       pcb_t* p = removeBlocked(semaddr);
       (*semaddr)++;
       if(p != NULL){
 	process_sb--;
-	p->p_s.s_v0 = reg_status;
+	p->p_s.reg_v0 = reg_status;
 	insertProcQ(&ready_q, p);
       }
       /* LDST */
