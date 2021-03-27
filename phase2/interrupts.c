@@ -47,6 +47,8 @@ void interrupt_handler(state_t* caller)
         memcpy(&(current_proc->p_s), caller, sizeof(state_t));
         insertProcQ(&ready_q, current_proc);
         current_proc = NULL;
+
+        scheduler();
     }
     else if (cause & TIMERINTERRUPT)
     {
@@ -70,6 +72,10 @@ void interrupt_handler(state_t* caller)
         /* Resettare il sem */
         *semadd = 0;
 
+        if (current_proc != NULL)
+          LDST(caller);
+        else
+          scheduler();
     }
     else{
       /* Non-timer interrupts */
@@ -122,6 +128,9 @@ void interrupt_handler(state_t* caller)
 	p->p_s.reg_v0 = reg_status;
 	insertProcQ(&ready_q, p);
       }
-      /* LDST */
+        if (current_proc != NULL)
+          LDST(caller);
+        else
+          scheduler();
     }
 }
