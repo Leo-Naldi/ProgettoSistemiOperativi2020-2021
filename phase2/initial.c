@@ -77,8 +77,8 @@ int main()
 	initKer();	
  
     LDIT(PSECOND); 
-    
-	term_puts("done.\n");
+   
+    scheduler();
 	HALT();
 
 	return 0;

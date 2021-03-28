@@ -25,6 +25,8 @@ extern pcb_PTR current_proc;
 
 extern cpu_t tod_start;
 
+extern void print(char* str);
+
 #define DEV_SEM_CNT sizeof(dev_sem_list_t)
 
 /* Semafori per device */

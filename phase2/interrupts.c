@@ -79,10 +79,10 @@ void interrupt_handler(state_t* caller)
     }
     else{
       /* Non-timer interrupts */
-      unsigned int IP = (cause >> 7) & 255;
+      unsigned int IP = (cause >> 8) & 255;
       unsigned int intln = 0, tmp = IP;
       while(!(tmp%2)){
-	if(tmp == 0) return;
+	if(tmp == 0) PANIC();
 	tmp = tmp >> 1;
 	intln += 1;
       }
@@ -91,8 +91,8 @@ void interrupt_handler(state_t* caller)
       unsigned int tran = 0;
       /* da aggiungere precedenza di termread */
       if(intln != 7){
-	while(!(tmp%2)){
-	  if(tmp == 0) return;
+	while(!(tmp%2)) {
+	  if(tmp == 0) PANIC();
 	  tmp = tmp >> 1;
 	  devno += 1;
 	}
@@ -112,9 +112,9 @@ void interrupt_handler(state_t* caller)
 	if(!tran) devno = devno_recv;
       }
       unsigned int status = caller->status;
-      unsigned int IEc = status % 2, IM = (status>>(7+intln)) % 2;
-      if(!(IEc & IM)) return;
-      devreg_t *devr = GET_DEVREG_ADDR(intln, devno);
+      unsigned int IEc = status % 2, IM = (status>>(8+intln)) % 2;
+      /* if(!(IEc & IM)) HALT();  Viene beccata sempre */
+      devreg_t *devr = (devreg_t*)GET_DEVREG_ADDR(intln, devno);
       unsigned int reg_status = 0;
       if(intln == 7){
 	if(tran){

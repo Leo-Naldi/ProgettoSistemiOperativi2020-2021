@@ -144,8 +144,8 @@ static void syscall5(state_t* caller){/* WAIT FOR IO DEVICE */
     insertBlocked(&dev_sem->sem_mat[intlNo-3][dnum], current_proc);
   }else{
     int termRead = caller->reg_a3;
-    dev_sem->sem_mat[5-termRead][dnum] -= 1;
-    insertBlocked(&dev_sem->sem_mat[5-termRead][dnum], current_proc);
+    dev_sem->sem_mat[4+termRead][dnum] -= 1;
+    insertBlocked(&dev_sem->sem_mat[4+termRead][dnum], current_proc);
   }
   process_sb += 1;
 
@@ -199,7 +199,7 @@ void PassOrDie(state_t* caller, int exc_type)
 }
 
 void syscall_handler(state_t* caller){
-  unsigned int a0 = caller->reg_v0;
+  unsigned int a0 = caller->reg_a0;
   switch(a0){
     case 1:
       syscall1(caller);
