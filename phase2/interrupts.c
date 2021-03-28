@@ -86,7 +86,7 @@ void interrupt_handler(state_t* caller)
 	tmp = tmp >> 1;
 	intln += 1;
       }
-      unsigned int *devword = (unsigned int*)(0x10000040 + 0x04 * (intln - 3));
+      unsigned int *devword = (unsigned int*)GET_DEVWORD(intln);
       unsigned int devno = 0; tmp = *devword;
       unsigned int tran = 0;
       /* da aggiungere precedenza di termread */
@@ -100,9 +100,9 @@ void interrupt_handler(state_t* caller)
 	unsigned int devno_recv = 100;
 	while(tmp!=0){
 	  if(tmp%2){
-	    unsigned int *devAddrBase = 0x10000054 + ((intln - 3) * 0x80) + (devno * 0x10);
-	    unsigned int reg_status_recv = *devAddrBase;
-	    unsigned int reg_status_tran = *(devAddrBase + 0x8);
+	    devreg_t *devr = (devreg_t*)GET_DEVREG_ADDR(intln, devno);
+	    unsigned int reg_status_recv = devr->term.recv_status;
+	    unsigned int reg_status_tran = devr->term.transm_status;
 	    if((reg_status_tran & 255) == 5){ tran = 1; break;}
 	    else if(devno_recv == 100) devno_recv = devno;
 	  }
@@ -114,9 +114,21 @@ void interrupt_handler(state_t* caller)
       unsigned int status = caller->status;
       unsigned int IEc = status % 2, IM = (status>>(7+intln)) % 2;
       if(!(IEc & IM)) return;
-      unsigned int *devAddrBase = 0x10000054 + ((intln - 3) * 0x80) + (devno * 0x10);
-      unsigned int reg_status = *(devAddrBase + tran * 0x8);
-      *(devAddrBase + 0x4) = ACK;
+      devreg_t *devr = GET_DEVREG_ADDR(intln, devno);
+      unsigned int reg_status = 0;
+      if(intln == 7){
+	if(tran){
+	  reg_status = devr->term.transm_status;
+	  devr->term.transm_command = ACK;
+	}
+	else{
+	  reg_status = devr->term.recv_status;
+	  devr->term.recv_command = ACK;
+	}
+      }else{
+	reg_status = devr->dtp.status;
+	devr->dtp.command = ACK;
+      }
       /* V operation */
       int* semaddr = NULL;
       if(intln < 7) semaddr = &(dev_sem->sem_mat[intln-3][devno]);
@@ -128,9 +140,9 @@ void interrupt_handler(state_t* caller)
 	p->p_s.reg_v0 = reg_status;
 	insertProcQ(&ready_q, p);
       }
-        if (current_proc != NULL)
-          LDST(caller);
-        else
-          scheduler();
+      if (current_proc != NULL)
+	LDST(caller);
+      else
+	scheduler();
     }
 }
