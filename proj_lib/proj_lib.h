@@ -47,6 +47,7 @@
 #define GET_DEVREG_ADDR(LINE_NO, DEV_NO) (DEVREG_BASE + ((LINE_NO) - 3) * 0x80 +  \
                                             (DEV_NO * 0x10))
 
+#define GET_DEVWORD(LINE_NO) (0x10000040 + 0x04 * (intln - 3))
 
 typedef unsigned int u32;
 
