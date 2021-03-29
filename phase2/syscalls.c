@@ -79,7 +79,8 @@ static void syscall2(state_t* caller)
             }
 
             outBlocked(k);
-            (*(k->p_semAdd))++;
+            if (!IS_DEV_SEMADDR(k->p_semAdd, dev_sem))  /* device semaphores get incremented by the interrupt handler */
+                (*(k->p_semAdd))++;
         }
 
         freePcb(k);
@@ -213,6 +214,11 @@ void PassOrDie(state_t* caller, int exc_type)
 
 void syscall_handler(state_t* caller){
   unsigned int a0 = caller->reg_a0;
+  if (caller->status & KUPBITON)
+  {
+      /* Priviledged op, throw progtrap */
+      PassOrDie(caller, GENERALEXCEPT); /* TODO there was also some setting of cause.exec to do or smth */
+  }
   switch(a0){
     case 1:
       syscall1(caller);
