@@ -1,29 +1,5 @@
 #include "interrupts.h"
 
-/* Ritorna 0 se l'interrupt sul terminale dato
- * e' sul sub device in scrittura, uno se e' su quello
- * in lettura. 
- *
- * NB: non controlla se effettivamente ci sia
- * l'interrupt, se non lo trova sul sub-device di scrittura da per scontato
- * che sia su quello in lettura 
- */
-int is_read(termreg_t* tr)
-{
-    /* Scrittura ha priorita' piu' alta
-     * quindi controlla prima quella in caso 
-     * entrambe siano accese */
-    switch (tr->transm_status)
-    {
-        case 2: case 4: case 5:
-            return 0;
-        
-        default:
-            break;
-    }
-
-    return 1;
-}
 
 
 void interrupt_handler(state_t* caller)
@@ -71,6 +47,8 @@ void interrupt_handler(state_t* caller)
         }
         /* Resettare il sem */
         *semadd = 0;
+        
+        STCK(tod_start);
 
         if (current_proc != NULL)
           LDST(caller);
@@ -82,7 +60,7 @@ void interrupt_handler(state_t* caller)
       unsigned int IP = (cause >> 8) & 255;
       unsigned int intln = 0, tmp = IP;
       while(!(tmp%2)){
-	if(tmp == 0) PANIC();
+	if(tmp == 0) PANIC(); 
 	tmp = tmp >> 1;
 	intln += 1;
       }
@@ -140,6 +118,7 @@ void interrupt_handler(state_t* caller)
 	p->p_s.reg_v0 = reg_status;
 	insertProcQ(&ready_q, p);
       }
+      STCK(tod_start);
       if (current_proc != NULL)
 	LDST(caller);
       else

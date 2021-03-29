@@ -23,11 +23,12 @@ static void syscall1(state_t *caller)
     pcb_PTR child = allocPcb();
     if(child == NULL) {
         caller->reg_v0 = -1;
-        return;
+        update_cpu_usage(current_proc, &tod_start);
+        LDST(caller);
     }
     memcpy(&(child->p_s), (state_t*) caller -> reg_a1, sizeof(state_t));
 
-    if((state_t*) caller -> reg_a2 == NULL || caller -> reg_a2 == 0)
+    if( caller -> reg_a2 == (int) NULL)
         child -> p_supportStruct = NULL;
     else
         child -> p_supportStruct = (support_t*) caller -> reg_a2;
@@ -39,6 +40,7 @@ static void syscall1(state_t *caller)
     process_count += 1;
     caller -> reg_v0 = 0;
 
+    update_cpu_usage(current_proc, &tod_start);
     LDST(caller);
 }
 
@@ -102,6 +104,7 @@ static void syscall3(state_t* caller){/* PASSEREN */
     ret_blocking(caller);
   }
 
+    update_cpu_usage(current_proc, &tod_start);
   LDST(caller);
 }
 
@@ -132,6 +135,7 @@ static void syscall4(state_t* caller) /* VERHOGEN */
         }
     }
 
+    update_cpu_usage(current_proc, &tod_start);
     LDST(caller);
 	
 }
@@ -157,6 +161,7 @@ static void syscall6(state_t* caller) /* GET CPU TIME */
 	/* In realta' current_proc e caller dovrebbero essere la stessa cosa */
     update_cpu_usage(current_proc, &tod_start);
 	caller->reg_v0 = current_proc->p_time;
+    update_cpu_usage(current_proc, &tod_start);
     LDST(caller);
 }
 
@@ -175,7 +180,8 @@ static void syscall8(state_t* caller)
 {
    /* Se current_proc->  */ 
     caller->reg_v0 = (unsigned int) current_proc->p_supportStruct;
-
+    
+    update_cpu_usage(current_proc, &tod_start);
     LDST(caller);
 }
 
@@ -194,7 +200,14 @@ void PassOrDie(state_t* caller, int exc_type)
         context_t* sup_handler = &(sup_puv->sup_exceptContext[exc_type]);
 
         memcpy(excp_state, caller, sizeof(state_t));
+        update_cpu_usage(current_proc, &tod_start);
         LDCXT(sup_handler->c_stackPtr, sup_handler->c_status, sup_handler->c_pc);
+
+        /* Will we ever even get here? */
+        if (current_proc != NULL)
+          LDST(caller);
+        else
+          scheduler();
     }
 }
 
@@ -227,7 +240,9 @@ void syscall_handler(state_t* caller){
       break;
     default:
       if(a0 >= 9)
-	PassOrDie(caller, GENERALEXCEPT);
+      {
+    	PassOrDie(caller, GENERALEXCEPT);
+      }
       break;
   }
 }

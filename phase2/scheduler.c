@@ -31,6 +31,8 @@ void scheduler()
 	}
 	else /* ready_q vuota, process_count > 0, process_sb == 0 */
 	{
+		setSTATUS((getSTATUS() | IECON | IMON) & TEBITOFF);
+		print("Deadlock detected\n");
 		/* Panik */
 		PANIC();
 	}
