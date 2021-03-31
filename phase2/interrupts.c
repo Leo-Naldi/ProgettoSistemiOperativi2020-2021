@@ -40,6 +40,7 @@ void interrupt_handler(state_t* caller)
 
         while (proc != NULL)
         {
+            proc->p_semAdd = NULL;
             insertProcQ(&ready_q, proc);
             process_sb--;
 
@@ -116,6 +117,7 @@ void interrupt_handler(state_t* caller)
       if(p != NULL){
 	process_sb--;
 	p->p_s.reg_v0 = reg_status;
+    p->p_semAdd = NULL;
 	insertProcQ(&ready_q, p);
       }
       STCK(tod_start);

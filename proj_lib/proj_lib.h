@@ -41,8 +41,6 @@
  * essere in un dev_sem_list_t) 
  * i puntatori sono castati a char* per per evitare warning e poter sommare il sizeof
  * correttamente */
-#define IS_DEV_SEMADDR(PTR, DSL_OFFSET) (((char*)(PTR) >= (char*)(DSL_OFFSET)) && \
-                                        ((char*)(PTR) < (char*)(DSL_OFFSET) + sizeof(dev_sem_list_t)))
 
 #define GET_DEVREG_ADDR(LINE_NO, DEV_NO) (DEVREG_BASE + ((LINE_NO) - 3) * 0x80 +  \
                                             (DEV_NO * 0x10))

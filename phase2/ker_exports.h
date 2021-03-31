@@ -27,6 +27,8 @@ extern cpu_t tod_start;
 
 extern void print(char* str);
 
+int IS_DEV_SEMADDR(int* semaddr, dev_sem_list_t* ds);
+
 #define DEV_SEM_CNT sizeof(dev_sem_list_t)
 
 /* Semafori per device */

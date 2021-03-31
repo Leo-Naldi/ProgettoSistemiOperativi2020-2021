@@ -357,7 +357,6 @@ void p3() {
 
 	time1 = 0;
 	time2 = 0;
-	print("About to Loop in p3...\n");
 	/* loop until we are delayed at least half of clock V interval */
 	while (time2-time1 < (CLOCKINTERVAL >> 1) )  {
 		STCK(time1);			/* time of day     */

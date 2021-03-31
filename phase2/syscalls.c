@@ -5,6 +5,14 @@
  * come parametro, che viene salvato in CP0 prima di tirare l'eccezione.
  * Sould be easy to get ma una cosa alla volta. */
 
+int IS_DEV_SEMADDR(int* semaddr, dev_sem_list_t* d)
+{
+    if ((semaddr >= (int*) d) && (semaddr <= &(d->sem_mat[5][7])))
+        return 1;
+    else
+        return 0;
+}
+
 /*
  * Returning procedure for blocking syscalls.
  * */
@@ -84,6 +92,7 @@ static void syscall2(state_t* caller)
         }
 
         freePcb(k);
+        process_count--;
     }
 
     current_proc = NULL;
@@ -131,7 +140,7 @@ static void syscall4(state_t* caller) /* VERHOGEN */
             {
                 process_b--;
             }
-
+            p->p_semAdd = NULL;
             insertProcQ(&ready_q, p);
         }
     }
