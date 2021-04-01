@@ -68,7 +68,6 @@ void interrupt_handler(state_t* caller)
       unsigned int *devword = (unsigned int*)GET_DEVWORD(intln);
       unsigned int devno = 0; tmp = *devword;
       unsigned int tran = 0;
-      /* da aggiungere precedenza di termread */
       if(intln != 7){
 	while(!(tmp%2)) {
 	  if(tmp == 0) PANIC();
@@ -80,7 +79,6 @@ void interrupt_handler(state_t* caller)
 	while(tmp!=0){
 	  if(tmp%2){
 	    devreg_t *devr = (devreg_t*)GET_DEVREG_ADDR(intln, devno);
-	    unsigned int reg_status_recv = devr->term.recv_status;
 	    unsigned int reg_status_tran = devr->term.transm_status;
 	    if((reg_status_tran & 255) == 5){ tran = 1; break;}
 	    else if(devno_recv == 100) devno_recv = devno;
@@ -90,8 +88,6 @@ void interrupt_handler(state_t* caller)
 	}
 	if(!tran) devno = devno_recv;
       }
-      unsigned int status = caller->status;
-      unsigned int IEc = status % 2, IM = (status>>(8+intln)) % 2;
       /* if(!(IEc & IM)) HALT();  Viene beccata sempre */
       devreg_t *devr = (devreg_t*)GET_DEVREG_ADDR(intln, devno);
       unsigned int reg_status = 0;
