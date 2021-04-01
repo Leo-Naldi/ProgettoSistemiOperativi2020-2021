@@ -141,5 +141,7 @@ pcb_t* removeBlocked(int *semAdd)
 		semdFree_h = k;
 	}
 
+	res->p_semAdd = NULL;
+
 	return res;	
 }
