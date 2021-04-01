@@ -19,7 +19,6 @@ void interrupt_handler(state_t* caller)
      * Qui scrivo la parte per i PLT Interrupt
      * Controllare se per setTIMER devo essere in kernel mode
      */
-        setTIMER(TIMESLICE);
         memcpy(&(current_proc->p_s), caller, sizeof(state_t));
         insertProcQ(&ready_q, current_proc);
         current_proc = NULL;
@@ -61,7 +60,7 @@ void interrupt_handler(state_t* caller)
       unsigned int IP = (cause >> 8) & 255;
       unsigned int intln = 0, tmp = IP;
       while(!(tmp%2)){
-	if(tmp == 0) PANIC(); 
+	if(tmp == 0) HALT(); 
 	tmp = tmp >> 1;
 	intln += 1;
       }
@@ -71,7 +70,7 @@ void interrupt_handler(state_t* caller)
       /* da aggiungere precedenza di termread */
       if(intln != 7){
 	while(!(tmp%2)) {
-	  if(tmp == 0) PANIC();
+	  if(tmp == 0) HALT();
 	  tmp = tmp >> 1;
 	  devno += 1;
 	}

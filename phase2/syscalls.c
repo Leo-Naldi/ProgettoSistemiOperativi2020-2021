@@ -86,9 +86,11 @@ static void syscall2(state_t* caller)
                 process_b--;
             }
 
-            outBlocked(k);
             if (!IS_DEV_SEMADDR(k->p_semAdd, dev_sem))  /* device semaphores get incremented by the interrupt handler */
                 (*(k->p_semAdd))++;
+            
+            outBlocked(k);
+            k->p_semAdd = NULL;
         }
 
         freePcb(k);
@@ -213,20 +215,18 @@ void PassOrDie(state_t* caller, int exc_type)
         update_cpu_usage(current_proc, &tod_start);
         LDCXT(sup_handler->c_stackPtr, sup_handler->c_status, sup_handler->c_pc);
 
-        /* Will we ever even get here? */
-        if (current_proc != NULL)
-          LDST(caller);
-        else
-          scheduler();
     }
 }
 
 void syscall_handler(state_t* caller){
   unsigned int a0 = caller->reg_a0;
-  if (caller->status & KUPBITON)
+
+  if (a0 <= 0) PANIC(); /* in the final version it should be a sys2? */
+  
+  if ((caller->status & STATUS_KUp_BIT) && (a0 < 9)) /* Process was running in user mode */
   {
-      /* Priviledged op, throw progtrap */
-      PassOrDie(caller, GENERALEXCEPT); /* TODO there was also some setting of cause.exec to do or smth */
+          /* Priviledged op, throw progtrap */
+    syscall2(caller);
   }
   switch(a0){
     case 1:
@@ -254,10 +254,7 @@ void syscall_handler(state_t* caller){
       syscall8(caller);
       break;
     default:
-      if(a0 >= 9)
-      {
     	PassOrDie(caller, GENERALEXCEPT);
-      }
-      break;
+        break;
   }
 }
