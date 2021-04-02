@@ -4,8 +4,10 @@
 
 void scheduler() 
 {
-	if((current_proc = removeProcQ(&ready_q)) != NULL)
+	if(!emptyProcQ(ready_q))
 	{
+		current_proc = removeProcQ(&ready_q);
+
 		setTIMER(TIMESLICE); /* set PLT. spero. */
 		
 		STCK(tod_start); /* Tempo in cui il processo ha iniziato a usare la cpu */
@@ -26,7 +28,7 @@ void scheduler()
 	else /* ready_q vuota, process_count > 0, process_sb == 0 */
 	{
 		/* Panik */
-		HALT();
+		PANIC();
 	}
 }
 

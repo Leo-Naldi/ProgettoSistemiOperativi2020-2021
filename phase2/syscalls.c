@@ -54,6 +54,7 @@ static void syscall1(state_t *caller)
 
 static void syscall2(state_t* caller)
 {
+    if (current_proc == NULL) PANIC();
     /* Stacca il padre */
     if (current_proc->p_prnt != NULL)
     {
@@ -92,7 +93,11 @@ static void syscall2(state_t* caller)
             outBlocked(k);
             k->p_semAdd = NULL;
         }
-
+        else
+        {
+            if ((outProcQ(&ready_q, k) != k) && (k != current_proc))
+                PANIC(); /* For debugging */
+        }
         freePcb(k);
         process_count--;
     }
@@ -199,9 +204,9 @@ static void syscall8(state_t* caller)
 
 void PassOrDie(state_t* caller, int exc_type)
 {
-    support_t* sup_puv; /* Support Level PassUp Vector */
+    support_t* sup_puv = current_proc->p_supportStruct; /* Support Level PassUp Vector */
 
-    if ((sup_puv = current_proc->p_supportStruct) == NULL)
+    if ((sup_puv == NULL))
     {
         syscall2(caller);
     }
@@ -225,9 +230,12 @@ void syscall_handler(state_t* caller){
   
   if ((caller->status & STATUS_KUp_BIT) && (a0 < 9)) /* Process was running in user mode */
   {
-          /* Priviledged op, throw progtrap */
+    /* Le slide dicono di far cosi, la guida di pandos dice di fare una
+     * program trap. */
     syscall2(caller);
   }
+  
+  caller->pc_epc += 4;
   switch(a0){
     case 1:
       syscall1(caller);
@@ -253,8 +261,9 @@ void syscall_handler(state_t* caller){
     case 8:
       syscall8(caller);
       break;
-    default:
-    	PassOrDie(caller, GENERALEXCEPT);
-        break;
+    default: 
+      caller->pc_epc -= 4;	
+      PassOrDie(caller, GENERALEXCEPT);
+      break;
   }
 }

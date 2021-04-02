@@ -5,7 +5,7 @@ void exceHandler(){
 
     if (current_proc != NULL) update_cpu_usage(current_proc, &tod_start);
     
-    switch (CAUSE_GET_EXCCODE(getCAUSE())) {
+    switch (CAUSE_GET_EXCCODE(caller->cause)) {
         case EXC_INT:
             interrupt_handler(caller);
             break;
@@ -13,7 +13,6 @@ void exceHandler(){
             PassOrDie(caller, PGFAULTEXCEPT);
             break;
         case EXC_SYS:
-            SET_PC(*caller, caller->pc_epc + WORD_SIZE);
             syscall_handler(caller);
             break;
         case EXC_ADEL: case EXC_ADES: case EXC_IBE: case EXC_DBE:

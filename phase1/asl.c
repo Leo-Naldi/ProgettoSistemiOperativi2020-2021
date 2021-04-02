@@ -67,6 +67,7 @@ void initASL(void)
 pcb_PTR outBlocked(pcb_PTR p)
 {
 	semd_PTR s = searchAdd(p->p_semAdd);
+	pcb_t* res;
 	
 	/* Not sure if this is actually needed */
 	if (s == NULL)
@@ -74,7 +75,10 @@ pcb_PTR outBlocked(pcb_PTR p)
 		return NULL;
 	}
 	
-	return outProcQ(&(s->s_procQ), p);
+	res =  outProcQ(&(s->s_procQ), p);
+	if (res != NULL) res->p_semAdd = NULL;
+
+	return res;
 }
 
 pcb_PTR headBlocked(int* semAdd)
@@ -95,7 +99,7 @@ int insertBlocked(int *semAdd, pcb_t *p){
     p->p_semAdd = semAdd;
     return 0;
   }
-  if(semdFree_h == NULL) return 1;        /* Ritorna TRUE se la lista dei SEMD liberi o inutilizzati e' vuota */ 
+  if(semdFree_h == NULL) PANIC();        /* Ritorna TRUE se la lista dei SEMD liberi o inutilizzati e' vuota */ 
   tmp = semdFree_h;                       /* Prende il primo elemento della semdFree per poi inserirlo nell'ASL */
   semdFree_h = semdFree_h->s_next;          /* Aggiorna il head di semdFree */
   semd_PTR sliding_tmp = semd_h;          /* Inizializza il puntatore al head dell'ASL neccessario per scorrere la lista 
