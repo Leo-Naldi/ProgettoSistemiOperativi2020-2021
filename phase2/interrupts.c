@@ -19,6 +19,7 @@ void interrupt_handler(state_t* caller)
      * Qui scrivo la parte per i PLT Interrupt
      * Controllare se per setTIMER devo essere in kernel mode
      */
+        /* Timer will be set by sched */
         memcpy(&(current_proc->p_s), caller, sizeof(state_t));
         insertProcQ(&ready_q, current_proc);
         current_proc = NULL;

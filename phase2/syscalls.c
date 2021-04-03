@@ -29,6 +29,9 @@ static void syscall1(state_t *caller)
 {
     /* NB in insertChild() il current proc è quello che ha chiamato la syscall (in teoria)*/
     pcb_PTR child = allocPcb();
+
+    if (current_proc == NULL) PANIC();
+
     if(child == NULL) {
         caller->reg_v0 = -1;
         update_cpu_usage(current_proc, &tod_start);
@@ -65,42 +68,42 @@ static void syscall2(state_t* caller)
     pcb_t* child_queue = mkEmptyProcQ();
 
     insertProcQ(&child_queue, current_proc);
-    pcb_t* k;
+    pcb_t* target, *child;
 
     while (!emptyProcQ(child_queue))
     {
-        k = removeProcQ(&child_queue);
+        target = removeProcQ(&child_queue);
 
-        while (!emptyChild(k))
+        while (!emptyChild(target))
         {
-            insertProcQ(&child_queue, removeChild(k));
-        }
+            child = removeChild(target);
 
-        if (k->p_semAdd != NULL)
-        {
-            if (IS_DEV_SEMADDR(k->p_semAdd, dev_sem))
+            if (child->p_semAdd != NULL)
             {
-                process_sb--;
+                if (IS_DEV_SEMADDR(child->p_semAdd, dev_sem))
+                {
+                    process_sb--;
+                }
+                else
+                {
+                    process_b--;
+                    ++(*(child->p_semAdd));
+                }
+
+                outBlocked(child);
             }
             else
             {
-                process_b--;
+                outProcQ(&ready_q, child);
             }
 
-            if (!IS_DEV_SEMADDR(k->p_semAdd, dev_sem))  /* device semaphores get incremented by the interrupt handler */
-                (*(k->p_semAdd))++;
-            
-            outBlocked(k);
-            k->p_semAdd = NULL;
+            insertProcQ(&child_queue, child);
         }
-        else
-        {
-            if ((outProcQ(&ready_q, k) != k) && (k != current_proc))
-                PANIC(); /* For debugging */
-        }
-        freePcb(k);
+
+        freePcb(target);
         process_count--;
     }
+
 
     current_proc = NULL;
 
@@ -113,15 +116,12 @@ static void syscall3(state_t* caller){/* PASSEREN */
   if((*semaddr) < 0){
 
     insertBlocked(semaddr, current_proc);
-    if(IS_DEV_SEMADDR(semaddr, dev_sem))
-      process_sb += 1;
-    else
-      process_b += 1;
-    
+    process_b++;
+
     ret_blocking(caller);
   }
 
-    update_cpu_usage(current_proc, &tod_start);
+  update_cpu_usage(current_proc, &tod_start);
   LDST(caller);
 }
 
@@ -137,16 +137,9 @@ static void syscall4(state_t* caller) /* VERHOGEN */
         if (p != NULL)
         {
             /* NB : se cambia dev_sem deve cambiare anche sto if */
+            
+            process_b--;
 
-            if (IS_DEV_SEMADDR(semaddr, dev_sem))
-            {
-                /* era il semaforo di un device */
-                process_sb--;
-            }
-            else
-            {
-                process_b--;
-            }
             p->p_semAdd = NULL;
             insertProcQ(&ready_q, p);
         }
@@ -217,6 +210,8 @@ void PassOrDie(state_t* caller, int exc_type)
         context_t* sup_handler = &(sup_puv->sup_exceptContext[exc_type]);
 
         memcpy(excp_state, caller, sizeof(state_t));
+        SET_PC(*excp_state, excp_state->pc_epc + 4);
+        
         update_cpu_usage(current_proc, &tod_start);
         LDCXT(sup_handler->c_stackPtr, sup_handler->c_status, sup_handler->c_pc);
 
@@ -261,8 +256,8 @@ void syscall_handler(state_t* caller){
     case 8:
       syscall8(caller);
       break;
-    default: 
-      caller->pc_epc -= 4;	
+    default:
+      caller->pc_epc -= 4;
       PassOrDie(caller, GENERALEXCEPT);
       break;
   }
