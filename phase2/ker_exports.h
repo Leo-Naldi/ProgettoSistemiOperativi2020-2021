@@ -1,6 +1,14 @@
 #ifndef KER_EXPORTS_H
 #define KER_EXPORTS_H
 
+
+/**********************************************************************************************************
+ * 
+ * File contenente gli export delle variabili globali del kernel (vedi initial.c per i dettagli)
+ * e le funzioni di utility che utilizzano queste variabili.
+ *
+ * **********************************************************************************************************/
+
 #include <umps/types.h>
 #include <umps/const.h>
 #include <umps/libumps.h>
@@ -25,16 +33,12 @@ extern pcb_PTR current_proc;
 
 extern cpu_t tod_start;
 
-extern void print(char* str);
-
-int IS_DEV_SEMADDR(int* semaddr, dev_sem_list_t* ds);
-
-#define DEV_SEM_CNT sizeof(dev_sem_list_t)
-
-/* Semafori per device */
 extern dev_sem_list_t* dev_sem;
 
-/* Fine Macro indici */
+extern void print(char* str); /* Vedi p2test.c */
 
+/* Ritorna 1 se semaddr e' l'indirizzo del semaforo di un device,
+ * 0 altrimenti. */
+extern int IS_DEV_SEMADDR(int* semaddr, dev_sem_list_t* ds);
 
 #endif

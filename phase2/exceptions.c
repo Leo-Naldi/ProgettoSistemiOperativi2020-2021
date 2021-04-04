@@ -5,7 +5,7 @@ void exceHandler(){
 
     if (current_proc != NULL) update_cpu_usage(current_proc, &tod_start);
     
-    switch (CAUSE_GET_EXCCODE(caller->cause)) {
+    switch (CAUSE_GET_EXCCODE(getCAUSE())) {
         case EXC_INT:
             interrupt_handler(caller);
             break;

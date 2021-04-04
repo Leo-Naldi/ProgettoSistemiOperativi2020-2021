@@ -64,10 +64,19 @@ void freePcb(pcb_PTR p)
  * Undefined se p, p->p_next o p->p_prev sono NULL*/
 static int remove(pcb_t *p)
 {
-	if (p->p_next == p) return 1;
+	if (p->p_next == p) 
+	{
+		p->p_next = NULL;
+		p->p_prev = NULL;
+
+		return 1;
+	}
 	
 	p->p_next->p_prev = p->p_prev;
 	p->p_prev->p_next = p->p_next;
+
+	p->p_next = NULL;
+	p->p_prev = NULL;
 
 	return 0;
 }

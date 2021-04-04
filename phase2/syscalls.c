@@ -1,9 +1,6 @@
 #include "syscalls.h"
 #include "ker_exports.h"
 
-/* Per ora le ho fatte di modo che prendano lo stato del chiamante
- * come parametro, che viene salvato in CP0 prima di tirare l'eccezione.
- * Sould be easy to get ma una cosa alla volta. */
 
 int IS_DEV_SEMADDR(int* semaddr, dev_sem_list_t* d)
 {
@@ -13,8 +10,12 @@ int IS_DEV_SEMADDR(int* semaddr, dev_sem_list_t* d)
         return 0;
 }
 
+/* FUNZIONI PRIVATE */
+
 /*
- * Returning procedure for blocking syscalls.
+ * Procedura di ritorno per le syscall che bloccano il processo corrente.
+ * Aggiorna il p_time, copia lo stato di eccezione nel p_s, setta il current_proc
+ * e chiama lo scheduler.
  * */
 static void ret_blocking(state_t* caller)
 { 
@@ -24,6 +25,7 @@ static void ret_blocking(state_t* caller)
 
     scheduler();
 }
+
 
 static void syscall1(state_t *caller)
 {
@@ -38,8 +40,10 @@ static void syscall1(state_t *caller)
         LDST(caller);
     }
     memcpy(&(child->p_s), (state_t*) caller -> reg_a1, sizeof(state_t));
+    
+    child->p_supportStruct = NULL;
 
-    if( caller -> reg_a2 == (int) NULL)
+    if( (caller -> reg_a2 ==  NULL) || (caller->reg_a2 == 0))
         child -> p_supportStruct = NULL;
     else
         child -> p_supportStruct = (support_t*) caller -> reg_a2;
@@ -55,25 +59,36 @@ static void syscall1(state_t *caller)
     LDST(caller);
 }
 
+/*************************************************
+ *
+ * SYSCALL2: TERMINATETHREAD
+ *
+ * Uccide il processo correntemente in esecuzione e la sua progenie, 
+ * ritorna il controllo allo scheduler.
+ *
+ *************************************************/
 static void syscall2(state_t* caller)
 {
     if (current_proc == NULL) PANIC();
+    
     /* Stacca il padre */
     if (current_proc->p_prnt != NULL)
     {
         outChild(current_proc);
     }
 
-    /* Itera fino all'ultimo figlio */
+    /* Coda dei pcb da uccidere */
     pcb_t* child_queue = mkEmptyProcQ();
-
+    
     insertProcQ(&child_queue, current_proc);
     pcb_t* target, *child;
 
     while (!emptyProcQ(child_queue))
     {
         target = removeProcQ(&child_queue);
-
+        
+        /* Stacca tutti i figli di target, inserendoli nella child_queue,
+         * e rimuovendoli dalla ready_q/sem su cui erano bloccati */
         while (!emptyChild(target))
         {
             child = removeChild(target);
@@ -106,12 +121,24 @@ static void syscall2(state_t* caller)
 
 
     current_proc = NULL;
-
     scheduler();
 }
 
+
+/***************************************************
+ *
+ * SYSCALL3: PASSEREN
+ *
+ * Esegue una P sul semaforo il cui indirizzo e' letto
+ * da reg_a1. Se l'indirizzo letto e' NULL il 
+ * current_proc viene ucciso. 
+ *
+ ***************************************************/
 static void syscall3(state_t* caller){/* PASSEREN */
   int* semaddr = (int*) caller->reg_a1;
+  
+  if (semaddr == NULL) { syscall2(caller); }
+
   (*semaddr)--;
   if((*semaddr) < 0){
 
@@ -125,9 +152,20 @@ static void syscall3(state_t* caller){/* PASSEREN */
   LDST(caller);
 }
 
+/***************************************************
+ *
+ * SYSCALL4: VERHOGEN 
+ *
+ * Esegue una V sul semaforo il cui indirizzo e' letto da
+ * reg_a1, come in sys3 se l'indirizzo e' NULL il 
+ * current_proc viene ucciso.
+ *
+ ***************************************************/
 static void syscall4(state_t* caller) /* VERHOGEN */
 {
 	int* semaddr = (int*) caller->reg_a1;
+
+    if (semaddr == NULL) { syscall2(caller); } 
 	
 	(*semaddr)++;
 	
@@ -166,19 +204,29 @@ static void syscall5(state_t* caller){/* WAIT FOR IO DEVICE */
   ret_blocking(caller);
 }
 
+/***************************************************************
+ *
+ * SYSCALL6: GET CPU TIME
+ *
+ * Ritorna in v0 il valore contenuto in current_proc->p_time.
+ *
+ ***************************************************************/
 static void syscall6(state_t* caller) /* GET CPU TIME */
 {
 	/* In realta' current_proc e caller dovrebbero essere la stessa cosa */
     update_cpu_usage(current_proc, &tod_start);
 	caller->reg_v0 = current_proc->p_time;
-    update_cpu_usage(current_proc, &tod_start);
     LDST(caller);
 }
 
+
+/****************************************************************
+ *
+ * SYSCALL7: WAIT FOR CLOCK
+ *
+ ****************************************************************/
 static void syscall7(state_t *caller)
 {
-    /* controllare che il dev relativo al clock sia dev_sem[0]*/
-
     dev_sem->sys_timer -= 1;
     insertBlocked(&(dev_sem->sys_timer), current_proc);
     process_sb += 1;
@@ -188,7 +236,6 @@ static void syscall7(state_t *caller)
 
 static void syscall8(state_t* caller)
 {
-   /* Se current_proc->  */ 
     caller->reg_v0 = (unsigned int) current_proc->p_supportStruct;
     
     update_cpu_usage(current_proc, &tod_start);
@@ -210,7 +257,6 @@ void PassOrDie(state_t* caller, int exc_type)
         context_t* sup_handler = &(sup_puv->sup_exceptContext[exc_type]);
 
         memcpy(excp_state, caller, sizeof(state_t));
-        SET_PC(*excp_state, excp_state->pc_epc + 4);
         
         update_cpu_usage(current_proc, &tod_start);
         LDCXT(sup_handler->c_stackPtr, sup_handler->c_status, sup_handler->c_pc);
@@ -218,10 +264,17 @@ void PassOrDie(state_t* caller, int exc_type)
     }
 }
 
+/*****************************************************************************
+ *
+ * Syscall handler.
+ *
+ *
+ *
+ *****************************************************************************/
 void syscall_handler(state_t* caller){
   unsigned int a0 = caller->reg_a0;
 
-  if (a0 <= 0) PANIC(); /* in the final version it should be a sys2? */
+  if (a0 <= 0) syscall2(caller);
   
   if ((caller->status & STATUS_KUp_BIT) && (a0 < 9)) /* Process was running in user mode */
   {

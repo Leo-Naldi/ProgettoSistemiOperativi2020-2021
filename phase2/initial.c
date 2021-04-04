@@ -18,26 +18,32 @@ extern void uTLB_RefillHandler();
 /* Per utilizzare queste variabili all interno di altri file basta includere ker_exports.h
  * (include anche tutti i moduli di fase 1, proj_lib e umps)*/
 
-int process_count;
-int process_sb;
+int process_count;  /* Contatore dei processi ancora vivi */
+int process_sb;     /* Contatore dei processi bloccati su un device */
 int process_b;
-pcb_t* ready_q;
-pcb_PTR current_proc;
+pcb_t* ready_q;     /* Coda dei processi pronti per entrare in esecuzione */
+pcb_PTR current_proc;  /* Processo correntemente in esecuzione */
 
-/* Probabilmente servono anche un'altro paio di variabili per il tempo di utilizzo della cpu */
-cpu_t tod_start; /* Tipo questa lmao */
+
+cpu_t tod_start; /* Variabile che conterra' il valore del TOD all-inizio dell'esecuzione
+                    di un processo. */
 
 /* Semafori dei device, vedi pandos_types per lo struct */
-dev_sem_list_t ds;
-dev_sem_list_t* dev_sem;
+static dev_sem_list_t ds;
+dev_sem_list_t* dev_sem;  /* Puntatore a ds */
 
+
+/*  
+ * Inizializza le variabili globali del kernel, il passupvector 0, i moduli di fase 1.
+ * Crea inoltre il primo processo e lo inserisce nella ready_q.
+ *  */
 static void initKer()
 {
 
     passupvector_t* pu_vec0 = (passupvector_t*) PASSUPVECTOR; /* lo struct di passupvec_t si trova in umps/types.h */
     pu_vec0 -> tlb_refill_handler = (memaddr) uTLB_RefillHandler;
     pu_vec0 -> tlb_refill_stackPtr = pu_vec0->exception_stackPtr = KERNELSTACK;
-    pu_vec0 -> exception_handler = (memaddr) exceHandler /*(memaddr) funzione creata da noi per gli exception handler */;
+    pu_vec0 -> exception_handler = (memaddr) exceHandler; /*(memaddr) funzione creata da noi per gli exception handler */
 
 	initPcbs();
 	initASL();
@@ -66,9 +72,8 @@ static void initKer()
     current_proc = NULL;
     process_count++;
 
-    memset(&ds, 0, sizeof(dev_sem_list_t)); /* Setta i valori di tutti i sem a 0,
-                                                   probabilmente alcuni andranno settati
-                                                   a 1 */
+    memset(&ds, 0, sizeof(dev_sem_list_t)); /* Setta i valori di tutti i sem a 0 */
+
     dev_sem = &ds;
 }
 
@@ -76,10 +81,11 @@ int main()
 {
 	initKer();	
  
-    LDIT(PSECOND); 
+    LDIT(PSECOND); /* Inizializza il system wide timer con 100ms */
    
     scheduler();
-	HALT();
+
+	PANIC(); /* Non si dovrebbe arrivare mai qui. */
 
 	return 0;
 }

@@ -10,7 +10,7 @@ void interrupt_handler(state_t* caller)
      *
      * */
 
-    unsigned int cause = caller->cause;
+    unsigned int cause = getCAUSE();
 
     if (cause & LOCALTIMERINT)
     {
@@ -23,7 +23,6 @@ void interrupt_handler(state_t* caller)
         memcpy(&(current_proc->p_s), caller, sizeof(state_t));
         insertProcQ(&ready_q, current_proc);
         current_proc = NULL;
-
         scheduler();
     }
     else if (cause & TIMERINTERRUPT)
@@ -61,7 +60,7 @@ void interrupt_handler(state_t* caller)
       unsigned int IP = (cause >> 8) & 255;
       unsigned int intln = 0, tmp = IP;
       while(!(tmp%2)){
-	if(tmp == 0) HALT(); 
+	if(tmp == 0) PANIC(); 
 	tmp = tmp >> 1;
 	intln += 1;
       }
@@ -70,7 +69,7 @@ void interrupt_handler(state_t* caller)
       unsigned int tran = 0;
       if(intln != 7){
 	while(!(tmp%2)) {
-	  if(tmp == 0) HALT();
+	  if(tmp == 0) PANIC();
 	  tmp = tmp >> 1;
 	  devno += 1;
 	}
