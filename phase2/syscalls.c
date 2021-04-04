@@ -191,7 +191,8 @@ static void syscall4(state_t* caller) /* VERHOGEN */
 static void syscall5(state_t* caller){/* WAIT FOR IO DEVICE */
   int intlNo = caller->reg_a1;  /* interrupt line */
   int dnum = caller->reg_a2;    /* device number  */
-  if(intlNo < 7){
+  if(intlNo < 0 || intlNo > 7) return;
+  else if(intlNo < 7){
     dev_sem->sem_mat[intlNo-3][dnum] -= 1;
     insertBlocked(&dev_sem->sem_mat[intlNo-3][dnum], current_proc);
   }else{
@@ -200,7 +201,6 @@ static void syscall5(state_t* caller){/* WAIT FOR IO DEVICE */
     insertBlocked(&dev_sem->sem_mat[4+termRead][dnum], current_proc);
   }
   process_sb += 1;
-
   ret_blocking(caller);
 }
 
@@ -213,10 +213,10 @@ static void syscall5(state_t* caller){/* WAIT FOR IO DEVICE */
  ***************************************************************/
 static void syscall6(state_t* caller) /* GET CPU TIME */
 {
-	/* In realta' current_proc e caller dovrebbero essere la stessa cosa */
-    update_cpu_usage(current_proc, &tod_start);
-	caller->reg_v0 = current_proc->p_time;
-    LDST(caller);
+  /* In realta' current_proc e caller dovrebbero essere la stessa cosa */
+  update_cpu_usage(current_proc, &tod_start);
+  caller->reg_v0 = current_proc->p_time;
+  LDST(caller);
 }
 
 

@@ -50,23 +50,23 @@ void interrupt_handler(state_t* caller)
     }
     else{
       /* Non-timer interrupts */
-      unsigned int IP = (cause >> 8) & 255;
-      unsigned int intln = 0, tmp = IP;
-      while(!(tmp%2)){
+      unsigned int IP = (cause >> 8) & 255; /* IP */
+      unsigned int intln = 0, tmp = IP; /* interrupt line e una variabile temporanea */
+      while(!(tmp%2)){ /* l'identificazione dell'interrupt line, la verifica di line parte da questo con la priorità più alta */
 	if(tmp == 0) PANIC(); 
 	tmp = tmp >> 1;
 	intln += 1;
       }
-      unsigned int *devword = (unsigned int*)GET_DEVWORD(intln);
-      unsigned int devno = 0; tmp = *devword;
+      unsigned int *devword = (unsigned int*)GET_DEVWORD(intln); /* la parola che contiene l'informazione quali dispositivi fanno la richiesta su quel interrupt line*/
+      unsigned int devno = 0; tmp = *devword; 
       unsigned int tran = 0;
-      if(intln != 7){
+      if(intln != 7){ /* la ricerca del device non-terminale attivo con la priorità più alta */
 	while(!(tmp%2)) {
 	  if(tmp == 0) PANIC();
 	  tmp = tmp >> 1;
 	  devno += 1;
 	}
-      }else{
+      }else{ /* la ricerca del subdevice terminale attivo con la priorità più alta */
 	unsigned int devno_recv = 100;
 	while(tmp!=0){
 	  if(tmp%2){
@@ -80,10 +80,9 @@ void interrupt_handler(state_t* caller)
 	}
 	if(!tran) devno = devno_recv;
       }
-      /* if(!(IEc & IM)) HALT();  Viene beccata sempre */
-      devreg_t *devr = (devreg_t*)GET_DEVREG_ADDR(intln, devno);
+      devreg_t *devr = (devreg_t*)GET_DEVREG_ADDR(intln, devno); /* device register del dispositivo identificato con intln e devno */
       unsigned int reg_status = 0;
-      if(intln == 7){
+      if(intln == 7){ /* la memorizzazione del status nel reg_status e acknowledgment */
 	if(tran){
 	  reg_status = devr->term.transm_status;
 	  devr->term.transm_command = ACK;
@@ -105,7 +104,7 @@ void interrupt_handler(state_t* caller)
       if(p != NULL){
 	process_sb--;
 	p->p_s.reg_v0 = reg_status;
-    p->p_semAdd = NULL;
+	p->p_semAdd = NULL;
 	insertProcQ(&ready_q, p);
       }
       STCK(tod_start);
