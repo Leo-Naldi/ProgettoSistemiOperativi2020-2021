@@ -1,25 +1,17 @@
 #include "interrupts.h"
 
 
-
+/*
+ * Handler degli Interrupt
+ * */
 void interrupt_handler(state_t* caller)
 {
-    /*
-     * Capire quale device ha mandato l'interrupt
-     * Agire di conseguenza (si è un altro switch)
-     *
-     * */
 
     unsigned int cause = getCAUSE();
 
     if (cause & LOCALTIMERINT)
     {
 
-    /*
-     * Qui scrivo la parte per i PLT Interrupt
-     * Controllare se per setTIMER devo essere in kernel mode
-     */
-        /* Timer will be set by sched */
         memcpy(&(current_proc->p_s), caller, sizeof(state_t));
         insertProcQ(&ready_q, current_proc);
         current_proc = NULL;
@@ -28,8 +20,9 @@ void interrupt_handler(state_t* caller)
     else if (cause & TIMERINTERRUPT)
     {
         /* System wide interrupt handler */
-        /* Caricare 100 mls */
-
+        
+        /* Carica 100ms nel system timer (vale come
+         * ack dell'Interrupt) */
         LDIT(PSECOND); 
 
         /* Liberare tutti i pcb */
