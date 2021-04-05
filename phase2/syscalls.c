@@ -26,7 +26,14 @@ static void ret_blocking(state_t* caller)
     scheduler();
 }
 
-
+/*************************************************
+ *
+ * SYSCALL1: CREATETHREAD
+ *
+ * Crea un processo nuovo facendolo diventare figlio del processo corrente
+ * inserisce il processo appena creato nella readyQ
+ *
+ *************************************************/
 static void syscall1(state_t *caller)
 {
     /* NB in insertChild() il current proc è quello che ha chiamato la syscall (in teoria)*/
@@ -223,6 +230,9 @@ static void syscall6(state_t* caller) /* GET CPU TIME */
 /****************************************************************
  *
  * SYSCALL7: WAIT FOR CLOCK
+ *
+ * inserisce il current proc in coda nel semaforo sys_timer
+ * sys_timer è il device associato al clock
  *
  ****************************************************************/
 static void syscall7(state_t *caller)

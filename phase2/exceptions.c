@@ -1,5 +1,9 @@
 #include "exceptions.h"
 
+/*
+ * Exception handler, si occupa di richiamare gli handler relativi all'eccezione sollevata
+ *
+ * */
 void exceHandler(){
     state_t* caller = SAVED_STATE;
 
