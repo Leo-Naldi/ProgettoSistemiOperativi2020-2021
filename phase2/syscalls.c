@@ -36,11 +36,12 @@ static void ret_blocking(state_t* caller)
  *************************************************/
 static void syscall1(state_t *caller)
 {
-    /* NB in insertChild() il current proc è quello che ha chiamato la syscall (in teoria)*/
     pcb_PTR child = allocPcb();
+
 
     if (current_proc == NULL) PANIC();
 
+    // Tutti i pcb disponibili sono stati allocati
     if(child == NULL) {
         caller->reg_v0 = -1;
         update_cpu_usage(current_proc, &tod_start);
@@ -50,6 +51,7 @@ static void syscall1(state_t *caller)
     
     child->p_supportStruct = NULL;
 
+    // se non mi viene fornita alcuna suppStruct allora diventa NULL
     if( ((int*)(caller -> reg_a2) ==  NULL) || (caller->reg_a2 == 0))
         child -> p_supportStruct = NULL;
     else
