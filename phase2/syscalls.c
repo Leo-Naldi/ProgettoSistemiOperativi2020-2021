@@ -43,7 +43,7 @@ static void syscall1(state_t *caller)
     
     child->p_supportStruct = NULL;
 
-    if( (caller -> reg_a2 ==  NULL) || (caller->reg_a2 == 0))
+    if( ((int*)(caller -> reg_a2) ==  NULL) || (caller->reg_a2 == 0))
         child -> p_supportStruct = NULL;
     else
         child -> p_supportStruct = (support_t*) caller -> reg_a2;
