@@ -38,4 +38,4 @@ Il program counter di questo exception state sara' l'indirizzo dell'istruzione c
 (il processo in loop verra' messo in attesa prima o poi), ma una volta terminati i gli altri processi il test continua a stampare "other program trap" all'infinito.
 Un'hack per "evitare" questo loop e' aggiungere una chiamata SYSCALL(TERMINATETHREAD, 0, 0, 0) nella sezione default di p5gen.
 Le possibili ragioni di questo comportamento possono essere: o rimane un dangling pointer a p5 che causa in qualche modo un'eccezione non prevista,
-oppure un'eccezione non viene letta correttamente.
+oppure un'eccezione non viene letta correttamente, oppure in qualche modo p5 non viene terminato.

@@ -191,21 +191,25 @@ static void syscall4(state_t* caller) /* VERHOGEN */
  * Il device e' identificato dalla linea di interrupt e dal device 
  * number (letti dai registri a1 e a2). Se la linea di interrupt e'
  * 7 (terminale), viene usato il registro a3 per determinare se 
- * e' un'operazione di read (a3 != 0) o no.
+ * e' un'operazione di read o no.
  *
  * Il current_proc viene ucciso (sys2) se i parametri sono sbagliati
- * (a1 deve essere compreso tra 3 e 7, a2 tra 0 e 7).
+ * (a1 deve essere compreso tra 3 e 7, a2 tra 0 e 7, se a2 e' 7 allora
+ * a3 deve essere TRUE o FALSE).
  *
  ************************************************************/
 static void syscall5(state_t* caller){
   int intlNo = caller->reg_a1;  /* interrupt line */
   int dnum = caller->reg_a2;    /* device number  */
-  if(intlNo < 3 || intlNo > 7) return;
+  if(intlNo < 3 || intlNo > 7) syscall2(caller);
+  if((dnum < 0) || (dnum > 7)) syscall2(caller);
+
   else if(intlNo < 7){
     dev_sem->sem_mat[intlNo-3][dnum] -= 1;
     if (insertBlocked(&dev_sem->sem_mat[intlNo-3][dnum], current_proc)) PANIC();
   }else{
-    int termRead = (caller->reg_a3 == 0) ? 0:1;
+    if ((caller->reg_a3 != TRUE) && (caller->reg_a3 != FALSE)) syscall2(caller);
+    int termRead = caller->reg_a3;
     dev_sem->sem_mat[4+termRead][dnum] -= 1;
     if (insertBlocked(&dev_sem->sem_mat[4+termRead][dnum], current_proc)) PANIC();
   }
@@ -248,7 +252,7 @@ static void syscall7(state_t *caller)
 
 /******************************************************************
  *
- * SYSCALL8: 
+ * SYSCALL8: GET SUPPORT DATA 
  *
  * Ritorna un puntatore al support struct del current_proc.
  *
