@@ -1,14 +1,3 @@
-#include <umps/types.h>
-#include <umps/const.h>
-#include <umps/libumps.h>
-
-#include "pandos_const.h"
-#include "pandos_types.h"
-#include "proj_lib.h"
-
-#include "pcb.h"
-#include "asl.h"
-
 #include "ker_exports.h"
 #include "exceptions.h"
 
@@ -20,7 +9,6 @@ extern void uTLB_RefillHandler();
 
 int process_count;  /* Contatore dei processi ancora vivi */
 int process_sb;     /* Contatore dei processi bloccati su un device */
-int process_b;
 pcb_t* ready_q;     /* Coda dei processi pronti per entrare in esecuzione */
 pcb_PTR current_proc;  /* Processo correntemente in esecuzione */
 
@@ -50,7 +38,6 @@ static void initKer()
 
     process_count = 0;
     process_sb = 0;
-    process_b = 0;
     ready_q = mkEmptyProcQ();
 
 

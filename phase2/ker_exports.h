@@ -27,7 +27,6 @@
 
 extern int process_count;
 extern int process_sb;
-extern int process_b;
 extern pcb_t* ready_q;
 extern pcb_PTR current_proc;
 

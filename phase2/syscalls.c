@@ -100,7 +100,6 @@ static void syscall2(state_t* caller)
                 }
                 else
                 {
-                    process_b--;
                     ++(*(child->p_semAdd));
                 }
 
@@ -142,7 +141,6 @@ static void syscall3(state_t* caller){/* PASSEREN */
   if((*semaddr) < 0){
 
     if (insertBlocked(semaddr, current_proc)) PANIC();
-    process_b++;
 
     ret_blocking(caller);
   }
@@ -175,8 +173,6 @@ static void syscall4(state_t* caller) /* VERHOGEN */
         {
             /* NB : se cambia dev_sem deve cambiare anche sto if */
             
-            process_b--;
-
             p->p_semAdd = NULL;
             insertProcQ(&ready_q, p);
         }

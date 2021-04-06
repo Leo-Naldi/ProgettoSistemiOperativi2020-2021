@@ -187,7 +187,7 @@
 
 /* Do status & this to set the KUp bit to 0 */
 #define KUPBITOFF 0xFFFFFFF7
-#define KUPBITON (~KUPBITOFF)
+#define KUPBITON  0x8
 
 /* Do status & this to set the TE bit to 0 */
 #define TEBITOFF (~TEBITON)
