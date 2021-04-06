@@ -11,7 +11,6 @@ void interrupt_handler(state_t* caller)
 
     if (cause & LOCALTIMERINT)
     {
-
         memcpy(&(current_proc->p_s), caller, sizeof(state_t));
         insertProcQ(&ready_q, current_proc);
         current_proc = NULL;
@@ -28,6 +27,7 @@ void interrupt_handler(state_t* caller)
         /* Liberare tutti i pcb */
         int* semadd =  &(dev_sem->sys_timer);
         
+        STCK(tod_start);
         pcb_t* proc = removeBlocked(semadd);
 
         while (proc != NULL)
@@ -35,6 +35,8 @@ void interrupt_handler(state_t* caller)
             proc->p_semAdd = NULL;
             insertProcQ(&ready_q, proc);
             process_sb--;
+            
+            update_cpu_usage(proc, &tod_start); /* Unblocked process is billed for unblocking time */
 
             proc = removeBlocked(semadd);
         }
@@ -49,6 +51,7 @@ void interrupt_handler(state_t* caller)
           scheduler();
     }
     else{
+      STCK(tod_start);
       /* Non-timer interrupts */
       unsigned int IP = (cause >> 8) & 255; /* IP */
       unsigned int intln = 0, tmp = IP; /* interrupt line e una variabile temporanea */
@@ -106,6 +109,8 @@ void interrupt_handler(state_t* caller)
 	p->p_s.reg_v0 = reg_status;
 	p->p_semAdd = NULL;
 	insertProcQ(&ready_q, p);
+
+    update_cpu_usage(p, &tod_start);
       }
       STCK(tod_start);
       if (current_proc != NULL)

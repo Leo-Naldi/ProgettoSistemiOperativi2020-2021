@@ -38,10 +38,7 @@ static void syscall1(state_t *caller)
 {
     pcb_PTR child = allocPcb();
 
-
-    if (current_proc == NULL) PANIC();
-
-    // Tutti i pcb disponibili sono stati allocati
+    /* Tutti i pcb disponibili sono stati allocati */
     if(child == NULL) {
         caller->reg_v0 = -1;
         update_cpu_usage(current_proc, &tod_start);
@@ -51,7 +48,7 @@ static void syscall1(state_t *caller)
     
     child->p_supportStruct = NULL;
 
-    // se non mi viene fornita alcuna suppStruct allora diventa NULL
+    /* se non mi viene fornita alcuna suppStruct allora diventa NULL */
     if( ((int*)(caller -> reg_a2) ==  NULL) || (caller->reg_a2 == 0))
         child -> p_supportStruct = NULL;
     else
@@ -151,7 +148,7 @@ static void syscall3(state_t* caller){/* PASSEREN */
   (*semaddr)--;
   if((*semaddr) < 0){
 
-    insertBlocked(semaddr, current_proc);
+    if (insertBlocked(semaddr, current_proc)) PANIC();
     process_b++;
 
     ret_blocking(caller);
@@ -197,17 +194,31 @@ static void syscall4(state_t* caller) /* VERHOGEN */
 	
 }
 
-static void syscall5(state_t* caller){/* WAIT FOR IO DEVICE */
+/************************************************************
+ *
+ * SYSCALL5: WAIT FOR IO
+ *
+ * Blocca il current_proc sul semaforo del device corrispondente.
+ * Il device e' identificato dalla linea di interrupt e dal device 
+ * number (letti dai registri a1 e a2). Se la linea di interrupt e'
+ * 7 (terminale), viene usato il registro a3 per determinare se 
+ * e' un'operazione di read (a3 != 0) o no.
+ *
+ * Il current_proc viene ucciso (sys2) se i parametri sono sbagliati
+ * (a1 deve essere compreso tra 3 e 7, a2 tra 0 e 7).
+ *
+ ************************************************************/
+static void syscall5(state_t* caller){
   int intlNo = caller->reg_a1;  /* interrupt line */
   int dnum = caller->reg_a2;    /* device number  */
-  if(intlNo < 0 || intlNo > 7) return;
+  if(intlNo < 3 || intlNo > 7) return;
   else if(intlNo < 7){
     dev_sem->sem_mat[intlNo-3][dnum] -= 1;
-    insertBlocked(&dev_sem->sem_mat[intlNo-3][dnum], current_proc);
+    if (insertBlocked(&dev_sem->sem_mat[intlNo-3][dnum], current_proc)) PANIC();
   }else{
-    int termRead = caller->reg_a3;
+    int termRead = (caller->reg_a3 == 0) ? 0:1;
     dev_sem->sem_mat[4+termRead][dnum] -= 1;
-    insertBlocked(&dev_sem->sem_mat[4+termRead][dnum], current_proc);
+    if (insertBlocked(&dev_sem->sem_mat[4+termRead][dnum], current_proc)) PANIC();
   }
   process_sb += 1;
   ret_blocking(caller);
@@ -240,12 +251,19 @@ static void syscall6(state_t* caller) /* GET CPU TIME */
 static void syscall7(state_t *caller)
 {
     dev_sem->sys_timer -= 1;
-    insertBlocked(&(dev_sem->sys_timer), current_proc);
+    if (insertBlocked(&(dev_sem->sys_timer), current_proc)) PANIC();
     process_sb += 1;
   
     ret_blocking(caller);
 }
 
+/******************************************************************
+ *
+ * SYSCALL8: 
+ *
+ * Ritorna un puntatore al support struct del current_proc.
+ *
+ ******************************************************************/
 static void syscall8(state_t* caller)
 {
     caller->reg_v0 = (unsigned int) current_proc->p_supportStruct;
@@ -254,6 +272,14 @@ static void syscall8(state_t* caller)
     LDST(caller);
 }
 
+/*******************************************************************
+ *
+ * Funzione per la gestione di program trap/syscall > 8.
+ *
+ * Il controllo viene passato alla struttura di supporto se presente,
+ * altrimenti il current_proc viene ucciso.
+ *
+ *******************************************************************/
 void PassOrDie(state_t* caller, int exc_type)
 {
     support_t* sup_puv = current_proc->p_supportStruct; /* Support Level PassUp Vector */
@@ -280,7 +306,10 @@ void PassOrDie(state_t* caller, int exc_type)
  *
  * Syscall handler.
  *
- *
+ * Utilizza il registro a0 per determinare quale syscall sia stata invocata.
+ * Se il valore in a0 e' <= 0 il current_proc viene ucciso,
+ * Se il current_proc era in user mode e a0 e' < 9 viene ucciso,
+ * Se il valore in a0 e' >= 9 viene fatta una PassOrDie.
  *
  *****************************************************************************/
 void syscall_handler(state_t* caller){
@@ -290,9 +319,7 @@ void syscall_handler(state_t* caller){
   
   if ((caller->status & STATUS_KUp_BIT) && (a0 < 9)) /* Process was running in user mode */
   {
-    /* Le slide dicono di far cosi, la guida di pandos dice di fare una
-     * program trap. */
-    syscall2(caller);
+      syscall2(caller);
   }
   
   caller->pc_epc += 4;
