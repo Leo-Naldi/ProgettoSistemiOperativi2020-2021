@@ -2,13 +2,6 @@
 #include "ker_exports.h"
 
 
-int IS_DEV_SEMADDR(int* semaddr, dev_sem_list_t* d)
-{
-    if ((semaddr >= (int*) d) && (semaddr <= &(d->sem_mat[5][7])))
-        return 1;
-    else
-        return 0;
-}
 
 /* FUNZIONI PRIVATE */
 
@@ -101,7 +94,7 @@ static void syscall2(state_t* caller)
 
             if (child->p_semAdd != NULL)
             {
-                if (IS_DEV_SEMADDR(child->p_semAdd, dev_sem))
+                if (IS_DEV_SEMADDR(child->p_semAdd))
                 {
                     process_sb--;
                 }

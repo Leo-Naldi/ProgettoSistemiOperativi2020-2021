@@ -37,8 +37,8 @@ extern dev_sem_list_t* dev_sem;
 
 extern void print(char* str); /* Vedi p2test.c */
 
-/* Ritorna 1 se semaddr e' l'indirizzo del semaforo di un device,
- * 0 altrimenti. */
-extern int IS_DEV_SEMADDR(int* semaddr, dev_sem_list_t* ds);
+/* true se SEMADDR e' l'indirizzo del semaforo di un device, 0 altrimenti */
+#define IS_DEV_SEMADDR(SEMADDR)  ((((char*) (SEMADDR)) >= ((char*)dev_sem)) && \
+                                (((char*) (SEMADDR)) < ((char*) dev_sem) + sizeof(dev_sem_list_t)))
 
 #endif
