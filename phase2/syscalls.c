@@ -80,7 +80,7 @@ static void syscall2(state_t* caller)
     pcb_t* child_queue = mkEmptyProcQ();
     
     insertProcQ(&child_queue, current_proc);
-    pcb_t* target, *child;
+    pcb_t* target, *child, *p;
 
     while (!emptyProcQ(child_queue))
     {
@@ -99,10 +99,20 @@ static void syscall2(state_t* caller)
                     process_sb--;
                 }
                 else
-                {
+                { 
                     ++(*(child->p_semAdd));
-                }
+                    
+                    if (*(child->p_semAdd) <= 0) /* Basically V the semaphore */
+                    {
+                        p = removeBlocked(child->p_semAdd);
 
+                        if (p != NULL)
+                        {
+                            p->p_semAdd = NULL;
+                            insertProcQ(&ready_q, p);
+                        }
+                    }
+                }
                 outBlocked(child);
             }
             else
@@ -111,6 +121,30 @@ static void syscall2(state_t* caller)
             }
 
             insertProcQ(&child_queue, child);
+        }
+
+        if (target->p_semAdd != NULL)
+        {
+            if (IS_DEV_SEMADDR(target->p_semAdd))
+            {
+                process_sb--;
+            }
+            else
+            {
+                (*(target->p_semAdd))++;
+                
+                if (*(target->p_semAdd) <= 0) /* Basically V the semaphore */
+                {
+                    p = removeBlocked(target->p_semAdd);
+
+                    if (p != NULL)
+                    {
+                        p->p_semAdd = NULL;
+                        insertProcQ(&ready_q, p);
+                    }
+                }
+            }
+            outBlocked(target);
         }
 
         freePcb(target);
@@ -141,6 +175,8 @@ static void syscall3(state_t* caller){/* PASSEREN */
   if((*semaddr) < 0){
 
     if (insertBlocked(semaddr, current_proc)) PANIC();
+    
+    if (IS_DEV_SEMADDR(semaddr)) process_sb++;
 
     ret_blocking(caller);
   }
@@ -169,10 +205,13 @@ static void syscall4(state_t* caller) /* VERHOGEN */
     if (*semaddr <= 0) /* Someone was waiting */
     {
         pcb_t* p = removeBlocked(semaddr);
+
         if (p != NULL)
         {
             /* NB : se cambia dev_sem deve cambiare anche sto if */
             
+            if (IS_DEV_SEMADDR(semaddr)) process_sb--;
+
             p->p_semAdd = NULL;
             insertProcQ(&ready_q, p);
         }
@@ -342,7 +381,6 @@ void syscall_handler(state_t* caller){
       syscall8(caller);
       break;
     default:
-      caller->pc_epc -= 4;
       PassOrDie(caller, GENERALEXCEPT);
       break;
   }

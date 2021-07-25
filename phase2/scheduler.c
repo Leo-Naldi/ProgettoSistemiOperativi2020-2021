@@ -1,33 +1,36 @@
 #include "scheduler.h"
+#include "ker_exports.h"
 
+void initScheduler() {}
 
 void scheduler() 
 {
-	if(!emptyProcQ(ready_q))  /* C'e' un processo pronto per essere eseguito */
+	
+	if ((current_proc = removeProcQ(&ready_q)) != NULL)
 	{
-		current_proc = removeProcQ(&ready_q);
-
-		setTIMER(TIMESLICE); /* set PLT. */
+		SET_PLT_ON(current_proc->p_s); /* Enable il PLT in caso non lo sia */
+		setTIMER(TIMESLICE * (*((cpu_t *) TIMESCALEADDR))); /* set PLT. spero. */
 		
+		setSTATUS(getSTATUS() | TEBITON); /* Im like, 99% sure this is useless. */
+
 		STCK(tod_start); /* Tempo in cui il processo ha iniziato a usare la cpu */
 
 		LDST(&(current_proc->p_s));
 	}
-	else if (process_count == 0)  /* Tutti i processi sono morti, we done. */
+	else if (process_count == 0)
 	{
-		HALT();
+		HALT(); /* Calm */
 	}
-	else if (process_sb > 0)  /* C'e' almeno un processo soft-blocked. */
+	else if (process_sb > 0)
 	{
-		/* abilita gli interrupt, ALLOFF assicura che siamo in kernel mode con
-		 * il plt disabilitato */
-		setSTATUS(ALLOFF | IECON | IMON);
+		/* abilita gli interrupt */
+		setSTATUS((getSTATUS() | IECON | IMON) & TEBITOFF);
 
-		WAIT(); 
+		WAIT(); /* Calm */
 	}
-	else /* ready_q vuota, process_count > 0, process_sb == 0, deadlock */
+	else /* ready_q vuota, process_count > 0, process_sb == 0 */
 	{
+		/* Panik */
 		PANIC();
 	}
 }
-
