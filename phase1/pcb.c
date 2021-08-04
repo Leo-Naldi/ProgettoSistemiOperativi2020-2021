@@ -40,6 +40,7 @@ pcb_PTR allocPcb(void)
 	res->p_next_sib = NULL;
 	res->p_prev_sib = NULL;
 	res->p_semAdd = NULL;
+	res->p_supportStruct = NULL;
 	memset(&(res->p_s), 0, sizeof(state_t));
 	memset(&(res->p_time), 0, sizeof(cpu_t));
 
@@ -49,6 +50,8 @@ pcb_PTR allocPcb(void)
 /* Ri inserisce il pcb dato nella free list */
 void freePcb(pcb_PTR p)
 {
+	p->p_semAdd = NULL;
+	p->p_supportStruct = NULL;
 	pcb_PTR sup = pcbFree_h;
 	p->p_next = sup;
 	pcbFree_h = p;
@@ -195,6 +198,7 @@ pcb_PTR removeChild(pcb_PTR p)
 
 	target->p_prnt = NULL;
 	target->p_next_sib = NULL;
+	target->p_prev_sib = NULL;
 
 	return target;
 }
@@ -204,28 +208,30 @@ pcb_PTR outChild(pcb_PTR p)
  	if(p->p_prnt == NULL) 			/* P è orfano quindi return NULL*/
  		return NULL;
  	pcb_PTR res;
- 	if(p->p_next_sib != NULL && p->p_prev_sib != NULL){ 		/* P ha sia frtello dx sia sx */
- 		res = p;
- 		res->p_next_sib->p_prev_sib = res->p_prev_sib;
+ 	res = p;
+ 	if((p->p_next_sib != NULL) && (p->p_prev_sib != NULL)){ 		/* P ha sia frtello dx sia sx */
+ 		
+		res->p_next_sib->p_prev_sib = res->p_prev_sib;
  		res->p_prev_sib->p_next_sib = res->p_next_sib;
- 		res->p_prnt = NULL;
  		res->p_next_sib = NULL;
  		res->p_prev_sib = NULL;
- 	} else if(p->p_prev_sib == NULL){		/*  P ha solo fratelli a dx */
- 		res = p;
- 		res->p_prnt->p_child = res->p_next_sib;
- 	 	res->p_prnt = NULL;
+ 	
+	} else if((p->p_prev_sib == NULL) && (p->p_next_sib != NULL)){		/*  P ha solo fratelli a dx */
+ 		
+		res->p_prnt->p_child = res->p_next_sib;
  	 	res->p_next_sib->p_prev_sib = NULL;
  	 	res->p_next_sib = NULL;
- 	} else if (p->p_next_sib == NULL){ 		/* P ha solo fratelli a sx*/
- 		res = p;
- 	 	res->p_prnt = NULL;
- 		res->p_prev_sib->p_next_sib = NULL;
+ 	
+	} else if ((p->p_prev_sib != NULL) && (p->p_next_sib == NULL)) { 		/* P ha solo fratelli a sx*/
+ 		
+		res->p_prev_sib->p_next_sib = NULL;
  		res->p_prev_sib = NULL;
- 	} else {					/* P non ha fratelli */
- 		res = p;
- 		res->p_prnt->p_child = NULL;
- 		res->p_prnt = NULL;
- 	}
- 	return res;
+ 	
+	} else {					/* P non ha fratelli */
+ 		
+		res->p_prnt->p_child = NULL;
+ 	
+	}
+	res->p_prnt = NULL;
+	return res;
  }

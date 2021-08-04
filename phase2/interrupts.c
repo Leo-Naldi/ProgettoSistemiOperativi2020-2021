@@ -7,7 +7,7 @@
 void interrupt_handler(state_t* caller)
 {
 
-    unsigned int cause = getCAUSE();
+    unsigned int cause = caller->cause;
 
     if (cause & LOCALTIMERINT)
     {

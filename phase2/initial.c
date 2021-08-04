@@ -21,6 +21,8 @@ static dev_sem_list_t ds;
 dev_sem_list_t* dev_sem;  /* Puntatore a ds */
 
 
+void dummy();
+
 /*  
  * Inizializza le variabili globali del kernel, il passupvector 0, i moduli di fase 1.
  * Crea inoltre il primo processo e lo inserisce nella ready_q.
@@ -42,11 +44,15 @@ static void initKer()
 
 
     current_proc = allocPcb();
+
+    if (current_proc == NULL) 
+        PANIC();
+
     current_proc -> p_time = 0;
     current_proc -> p_semAdd = NULL;
     current_proc -> p_supportStruct = NULL;
     
-    STST(&(current_proc->p_s)); /* Not sure if this is needed o se basta una memset */
+    current_proc->p_s.status = 0;
 	RAMTOP(current_proc->p_s.reg_sp); /* Vedi pandos_const per la macro */
     SET_PC(current_proc->p_s, test);
 
@@ -66,6 +72,7 @@ static void initKer()
 
 int main()
 {
+    setSTATUS(0);
 	initKer();	
  
     LDIT(PSECOND); /* Inizializza il system wide timer con 100ms */
@@ -75,4 +82,11 @@ int main()
 	PANIC(); /* Non si dovrebbe arrivare mai qui. */
 
 	return 0;
+}
+
+
+void dummy()
+{
+    int i;
+    while (i < 100) i++;
 }

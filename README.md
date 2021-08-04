@@ -39,3 +39,6 @@ Il program counter di questo exception state sara' l'indirizzo dell'istruzione c
 Un'hack per "evitare" questo loop e' aggiungere una chiamata SYSCALL(TERMINATETHREAD, 0, 0, 0) nella sezione default di p5gen.
 Le possibili ragioni di questo comportamento possono essere: o rimane un dangling pointer a p5 che causa in qualche modo un'eccezione non prevista,
 oppure un'eccezione non viene letta correttamente, oppure in qualche modo p5 non viene terminato.
+
+## Bug Fixes
+Risolto il loop di other program trap (c'era un bug in outChild). Ora tutte le funzioni di asl.h che sbloccano un processo settano il psemadd a NULL.

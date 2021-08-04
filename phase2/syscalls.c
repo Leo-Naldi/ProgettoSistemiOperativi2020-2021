@@ -5,6 +5,11 @@
 
 /* FUNZIONI PRIVATE */
 
+static void syscall_solved(state_t* s)
+{
+    s->cause &= ~EXC_SYS;
+}
+
 /*
  * Procedura di ritorno per le syscall che bloccano il processo corrente.
  * Aggiorna il p_time, copia lo stato di eccezione nel p_s, setta il current_proc
@@ -14,6 +19,9 @@ static void ret_blocking(state_t* caller)
 { 
     update_cpu_usage(current_proc, &tod_start);
     memcpy(&(current_proc->p_s), caller, sizeof(state_t));
+    
+    syscall_solved(&(current_proc->p_s));
+
     current_proc = NULL;
 
     scheduler();
@@ -48,12 +56,16 @@ static void syscall1(state_t *caller)
         child -> p_supportStruct = (support_t*) caller -> reg_a2;
 
     insertProcQ(&ready_q, child);
+
+    if (current_proc == NULL) PANIC();
+
     insertChild(current_proc, child);
     child -> p_time = 0;
     child -> p_semAdd = NULL;
     process_count += 1;
     caller -> reg_v0 = 0;
-
+ 
+    syscall_solved(caller);
     update_cpu_usage(current_proc, &tod_start);
     LDST(caller);
 }
@@ -68,89 +80,42 @@ static void syscall1(state_t *caller)
  *************************************************/
 static void syscall2(state_t* caller)
 {
-    if (current_proc == NULL) PANIC();
-    
-    /* Stacca il padre */
-    if (current_proc->p_prnt != NULL)
-    {
-        outChild(current_proc);
-    }
+    if (current_proc == NULL) PANIC();    /* this should not be possible */
 
-    /* Coda dei pcb da uccidere */
-    pcb_t* child_queue = mkEmptyProcQ();
-    
-    insertProcQ(&child_queue, current_proc);
-    pcb_t* target, *child, *p;
+    pcb_t *b_queue = mkEmptyProcQ(), 
+          *target,
+          *child;
 
-    while (!emptyProcQ(child_queue))
+    outChild(current_proc);
+
+    insertProcQ(&b_queue, current_proc);
+
+    while ((target = removeProcQ(&b_queue)) != NULL)
     {
-        target = removeProcQ(&child_queue);
-        
-        /* Stacca tutti i figli di target, inserendoli nella child_queue,
-         * e rimuovendoli dalla ready_q/sem su cui erano bloccati */
         while (!emptyChild(target))
         {
             child = removeChild(target);
 
             if (child->p_semAdd != NULL)
             {
-                if (IS_DEV_SEMADDR(child->p_semAdd))
-                {
-                    process_sb--;
-                }
-                else
-                { 
-                    ++(*(child->p_semAdd));
-                    
-                    if (*(child->p_semAdd) <= 0) /* Basically V the semaphore */
-                    {
-                        p = removeBlocked(child->p_semAdd);
+              if (IS_DEV_SEMADDR(child->p_semAdd))
+                process_sb--;
+              else
+                (*(child->p_semAdd))++;
 
-                        if (p != NULL)
-                        {
-                            p->p_semAdd = NULL;
-                            insertProcQ(&ready_q, p);
-                        }
-                    }
-                }
-                outBlocked(child);
+              outBlocked(child);
             }
             else
             {
                 outProcQ(&ready_q, child);
             }
 
-            insertProcQ(&child_queue, child);
-        }
-
-        if (target->p_semAdd != NULL)
-        {
-            if (IS_DEV_SEMADDR(target->p_semAdd))
-            {
-                process_sb--;
-            }
-            else
-            {
-                (*(target->p_semAdd))++;
-                
-                if (*(target->p_semAdd) <= 0) /* Basically V the semaphore */
-                {
-                    p = removeBlocked(target->p_semAdd);
-
-                    if (p != NULL)
-                    {
-                        p->p_semAdd = NULL;
-                        insertProcQ(&ready_q, p);
-                    }
-                }
-            }
-            outBlocked(target);
+            insertProcQ(&b_queue, child);
         }
 
         freePcb(target);
         process_count--;
     }
-
 
     current_proc = NULL;
     scheduler();
@@ -181,6 +146,7 @@ static void syscall3(state_t* caller){/* PASSEREN */
     ret_blocking(caller);
   }
 
+    syscall_solved(caller);
   update_cpu_usage(current_proc, &tod_start);
   LDST(caller);
 }
@@ -217,6 +183,7 @@ static void syscall4(state_t* caller) /* VERHOGEN */
         }
     }
 
+    syscall_solved(caller);
     update_cpu_usage(current_proc, &tod_start);
     LDST(caller);
 	
@@ -268,6 +235,7 @@ static void syscall6(state_t* caller) /* GET CPU TIME */
   /* In realta' current_proc e caller dovrebbero essere la stessa cosa */
   update_cpu_usage(current_proc, &tod_start);
   caller->reg_v0 = current_proc->p_time;
+    syscall_solved(caller);
   LDST(caller);
 }
 
@@ -299,7 +267,7 @@ static void syscall7(state_t *caller)
 static void syscall8(state_t* caller)
 {
     caller->reg_v0 = (unsigned int) current_proc->p_supportStruct;
-    
+    syscall_solved(caller);
     update_cpu_usage(current_proc, &tod_start);
     LDST(caller);
 }
@@ -351,7 +319,7 @@ void syscall_handler(state_t* caller){
   
   if ((caller->status & STATUS_KUp_BIT) && (a0 < 9)) /* Process was running in user mode */
   {
-      syscall2(caller);
+      PassOrDie(caller, GENERALEXCEPT);
   }
   
   caller->pc_epc += 4;
@@ -381,6 +349,7 @@ void syscall_handler(state_t* caller){
       syscall8(caller);
       break;
     default:
+      caller->pc_epc -= 4;
       PassOrDie(caller, GENERALEXCEPT);
       break;
   }

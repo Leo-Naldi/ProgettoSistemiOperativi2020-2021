@@ -1,11 +1,14 @@
 #include "scheduler.h"
 #include "ker_exports.h"
 
+extern int error_occurred;
+extern int errcode;
+
 void initScheduler() {}
 
 void scheduler() 
 {
-	
+
 	if ((current_proc = removeProcQ(&ready_q)) != NULL)
 	{
 		SET_PLT_ON(current_proc->p_s); /* Enable il PLT in caso non lo sia */
@@ -30,6 +33,13 @@ void scheduler()
 	}
 	else /* ready_q vuota, process_count > 0, process_sb == 0 */
 	{
+
+		if (process_count < 0)
+		{
+			term_puts("HAHAHAHAHAHA\n");
+		}
+
+		term_puts("Deadlock Detected\n");
 		/* Panik */
 		PANIC();
 	}
