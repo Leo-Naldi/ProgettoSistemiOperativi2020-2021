@@ -9,6 +9,7 @@ BIN_DIR := ./bin
 PROJ_LIB_SRC := $(notdir $(wildcard $(PROJ_LIB_PATH)/*.c))
 PHASE1_SRC := $(notdir $(wildcard $(PHASE1_PATH)/*.c))
 PHASE2_SRC := $(notdir $(wildcard $(PHASE2_PATH)/*.c)) 
+PHASE3_SRC := $(notdir $(wildcard $(PHASE3_PATH)/*.c))
 
 PROJECT_SRC := $(PROJ_LIB_SRC) $(PHASE1_SRC) $(PHASE2_SRC)
 
@@ -24,11 +25,20 @@ $(shell mkdir -p $(BUILD_DIR))
 $(shell mkdir -p $(DEPS_DIR))
 $(shell mkdir -p $(BIN_DIR))
 
+export P3TEST_PREFIX
+
 .PHONY: all clean help
 
-all : $(BIN_DIR)/kernel.core.umps
+all : tests $(BIN_DIR)/kernel.core.umps
 
 include $(DEPS)
+
+debug: CFLAGS += -D$(DBG_ACTIVE)
+debug: clean
+debug: all
+
+tests: $(wildcard $(P3TEST_PREFIX)/*.c) $(wildcard $(P3TEST_PREFIX)/h/*.h)
+	$(MAKE) -C $(P3TEST_PREFIX)
 
 $(BIN_DIR)/kernel.core.umps : $(BIN_DIR)/kernel 
 	umps3-elf2umps -k $<
@@ -60,6 +70,7 @@ clean:
 
 	-@rm -f $(BUILD_DIR)/*.o
 	-@rm -f  $(BIN_DIR)/*
+	-@rm -f  $(P3TEST_PREFIX)/*.umps
 
 help: 
 	-@echo

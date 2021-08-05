@@ -13,8 +13,13 @@
 typedef signed int cpu_t;
 typedef unsigned int memaddr;
 
+typedef struct pteEntry_t {
+    unsigned int pte_entryHI;
+    unsigned int pte_entryLO;
+} pteEntry_t;
+
 typedef struct context_t {
-    unsigned int c_stackPtr;
+	unsigned int c_stackPtr;
     unsigned int c_status;
     unsigned int c_pc;
 } context_t;
@@ -23,6 +28,7 @@ typedef struct support_t {
     int       sup_asid;             /* process ID					*/
     state_t   sup_exceptState[2];   /* old state exceptions			*/
     context_t sup_exceptContext[2]; /* new contexts for passing up	*/
+    pteEntry_t sup_privatePgTbl[USERPGTBLSIZE]; /* user page table				*/
 } support_t;
 
 /* process table entry type */
@@ -76,6 +82,14 @@ typedef struct device_semaphores_list
 		int sem_mat[6][DEVPERINT];       /* Alias per la memoria precedente per permettere accesso matrix style */
 	};
 } dev_sem_list_t;
+
+
+/* Page swap pool information structure type */
+typedef struct swap_t {
+    int         sw_asid;   /* ASID number			*/
+    int         sw_pageNo; /* page's virt page no.	*/
+    pteEntry_t *sw_pte;    /* page's PTE entry.	*/
+} swap_t;
 
 /* End of project defined types */
 

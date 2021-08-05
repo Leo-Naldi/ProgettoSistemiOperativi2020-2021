@@ -26,6 +26,7 @@ CFLAGS_MIPS = -mips1 -mabi=32 -mno-gpopt -G 0 -mno-abicalls -fno-pic -mfp32 -Wal
 PROJ_LIB_PATH = ./proj_lib
 PHASE1_PATH = ./phase1
 PHASE2_PATH = ./phase2
+PHASE3_PATH = ./phase3
 TESTERS_PATH = ./testers
 
 INC = -I$(UMPS_DATA) -I$(UMPS_INCLUDE) -I$(PROJ_LIB_PATH) -I$(PHASE1_PATH) -I$(PHASE2_PATH)
@@ -35,5 +36,8 @@ CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) $(INC)
 # Flag per creare e aggiornare le depedencies (.d files), contenuti nella stessa dir 
 # dei file oggetto
 
-VPATH = $(UMPS_DATA) $(UMPS_INCLUDE) $(PROJ_LIB_PATH) $(PHASE1_PATH) $(PHASE2_PATH) $(TESTERS_PATH)
+P3TEST_PREFIX = ./testers/resources/testers
 
+VPATH = $(UMPS_DATA) $(UMPS_INCLUDE) $(PROJ_LIB_PATH) $(PHASE1_PATH) $(PHASE2_PATH) $(TESTERS_PATH) $(P3TEST_PREFIX) $(P3TEST_PREFIX)/h
+
+DBG_ACTIVE = __PANDOS_DEBUGGER_ACTIVE__
