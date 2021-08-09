@@ -209,6 +209,7 @@
 #define INSTALLED_DEV_BITMAP 0x1000002C
 #define INTERRUPT_DEV_BITMAP 0x10000040
 
+#define SWAP_POOL_START 0x20020000
 
 /* End of Project-defined constants */
 
