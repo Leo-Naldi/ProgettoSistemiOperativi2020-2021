@@ -36,11 +36,6 @@
 /* Ritorna tt se il bit KUP == 1, ff altrimenti*/
 #define IS_USER_MODE(x) ((x) & KUPBITON)
 
-/* True se PTR e' l-indirizzo di uno dei semafori di devices,
- * DSL_OFFSET sara' l'offset dei semafori di sistema (che si assumono
- * essere in un dev_sem_list_t) 
- * i puntatori sono castati a char* per per evitare warning e poter sommare il sizeof
- * correttamente */
 
 #define GET_DEVREG_ADDR(LINE_NO, DEV_NO) (DEVREG_BASE + ((LINE_NO) - 3) * 0x80 +  \
                                             (DEV_NO * 0x10))
