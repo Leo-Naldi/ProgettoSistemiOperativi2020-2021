@@ -160,7 +160,7 @@ static void pagefault_handler(support_t* sup)
 	if (io_error)
 	{
 		release_swap_pool_mutex();
-		SYSCALL(2, 0, 0, 0);
+		SYSCALL(TERMINATE, 0, 0, 0);
 	}
 	
 	io_error = flash_io(cur_proc_sup_ptr->sup_asid - 1, next_frame_index, page_no, 0);
@@ -168,7 +168,7 @@ static void pagefault_handler(support_t* sup)
 	if (io_error)
 	{
 		release_swap_pool_mutex();
-		SYSCALL(2, 0, 0, 0);
+		SYSCALL(TERMINATE, 0, 0, 0);
 	}
 	
 	swap_entry->sw_asid = sup->sup_asid;
@@ -180,7 +180,7 @@ static void pagefault_handler(support_t* sup)
 			
 	(swap_entry->sw_pte).pte_entryLO |= VALIDON;
 	(swap_entry->sw_pte).pte_entryLO &= (~GETPAGENO);
-	(swap_entry->sw_pte).pte_entryLO |= (next_frame_index << VPNSHIFT)
+	(swap_entry->sw_pte).pte_entryLO |= ((swap_pool_h + 1000 * next_frame_index) << VPNSHIFT)
 	
 	TLBCLR();
 	setSTATUS(old_status);
