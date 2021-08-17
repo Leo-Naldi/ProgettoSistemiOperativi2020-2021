@@ -1,3 +1,5 @@
+#include "support_syscalls.h"
+
 typedef unsigned int devregtr;
 
 /* FUNZIONI PRIVATE */
@@ -41,23 +43,21 @@ static void syscall10(state_t *caller){
  *************************************************/
 
 static void syscall11(state_t *caller){
-  char *virtAddr = caller->reg_a1;
+  char *virtAddr = (char*) caller->reg_a1;
   int len = caller->reg_a2;
-  if((virtAddr < KUSEG) || (virtAddr > MAXINT) || (len < 0) || (len > 128)){
-    syscall9(caller);
-  }
-  
+
+  if( (((unsigned int) virtAddr) < KUSEG) || (((unsigned int) virtAddr) > MAXINT) || (len < 0) || (len > 128)) syscall9(caller);
   unsigned int car_tr = 0;
-  unsigned int devno = (((caller->s_entryHI) >> 6) - 1) % 8; // (ASID - 1) % 8
+  unsigned int devno = ((getENTRYHI() >> 6) - 1) % 8; /* (ASID - 1) % 8 */
   dtpreg_t *printer = (dtpreg_t*) GET_DEVREG_ADDR(PRNTINT, devno);
   devregtr status;
 
-  SYSCALL(PASSERN, io_dev_mutex[PRINTER_ROW][devno], 0, 0);
+  SYSCALL(PASSEREN, io_dev_mutex[PRINTER_ROW][devno], 0, 0);
   while(*virtAddr != EOS){
     printer->command = PRINTCHR;
     printer->data0 = *virtAddr;
     status = SYSCALL(WAITIO, PRNTINT, devno, 0);
-    if((status & 0xFF) != 1){ // controlla se device ready
+    if((status & 0xFF) != 1){ /* controlla se device ready */
       SYSCALL(VERHOGEN, io_dev_mutex[PRINTER_ROW][devno], 0, 0);
       caller->reg_v0 = -1 * status;
       return;
@@ -81,22 +81,20 @@ static void syscall11(state_t *caller){
  *************************************************/
 
 static void syscall12(state_t *caller){
-  char *virtAddr = caller->reg_a1;
+  char *virtAddr = (char*) caller->reg_a1;
   int len = caller->reg_a2;
-  if((virtAddr < KUSEG) || (virtAddr > MAXINT) || (len < 0) || (len > 128)){
-    syscall9(caller);
-  }
-
+  
+  if( (((unsigned int) virtAddr) < KUSEG) || (((unsigned int) virtAddr) > MAXINT) || (len < 0) || (len > 128)) syscall9(caller);
   unsigned int car_tr = 0;
-  unsigned int devno = (((caller->s_entryHI) >> 6) - 1) % 8; // (ASID - 1) % 8
-  devregtr *base = (devregtr*) GET_DEVREG_ADDR(TERMINT, devno);
+  unsigned int devno = ((getENTRYHI() >> 6) - 1) % 8; /* (ASID - 1) % 8 */
+  devregtr *base = (devregtr*) GET_DEVREG_ADDR(PRNTINT, devno);
   devregtr status;
 
-  SYSCALL(PASSERN, io_dev_mutex[TERMW_ROW][devno], 0, 0);
+  SYSCALL(PASSEREN, io_dev_mutex[TERMW_ROW][devno], 0, 0);
   while(*virtAddr != EOS){
     *(base + 3) = PRINTCHR | (((devregtr) *virtAddr) << BYTELEN);
     status = SYSCALL(WAITIO, TERMINT, devno, 0);
-    if((status & 0xFF) != 5){ // controlla se character transmitted
+    if((status & 0xFF) != 5){ /* controlla se character transmitted */
       SYSCALL(VERHOGEN, io_dev_mutex[TERMW_ROW][devno], 0, 0);
       caller->reg_v0 = -1 * status;
       return;
@@ -120,26 +118,24 @@ static void syscall12(state_t *caller){
  *************************************************/
 
 static void syscall13(state_t *caller){
-  char *virtAddr = caller->reg_a1;
-  if((virtAddr < KUSEG) || (virtAddr > MAXINT)){
-    syscall9(caller);
-  }
+  char *virtAddr = (char*) caller->reg_a1;
+  if( (((unsigned int)virtAddr) < KUSEG) || (((unsigned int)virtAddr) > MAXINT)) syscall9(caller);
 
   unsigned int car_tr = 0;
-  unsigned int devno = (((caller->s_entryHI) >> 6) - 1) % 8; // (ASID - 1) % 8
+  unsigned int devno = ((getENTRYHI() >> 6) - 1) % 8; /* (ASID - 1) % 8 */
   devregtr *base = (devregtr*) GET_DEVREG_ADDR(TERMINT, devno);
   devregtr status;
 
-  SYSCALL(PASSERN, io_dev_mutex[TERMR_ROW][devno], 0, 0);
+  SYSCALL(PASSEREN, io_dev_mutex[TERMR_ROW][devno], 0, 0);
   while(*virtAddr != EOS){
     *(base + 1) = PRINTCHR;
     status = SYSCALL(WAITIO, TERMINT, devno, 1);
-    if((status & 0xFF) != 5){ // controlla se character received
+    if((status & 0xFF) != 5){ /* controlla se character received */
       SYSCALL(VERHOGEN, io_dev_mutex[TERMR_ROW][devno], 0, 0);
       caller->reg_v0 = -1 * status;
       return;
     }
-    *virtAddr = (status >> 8); // faccio shift per ottenere il carattere ricevuto
+    *virtAddr = (status >> 8); /* faccio shift per ottenere il carattere ricevuto */
     if(*virtAddr == EOS)
       break;
     car_tr++;
@@ -157,7 +153,7 @@ static void syscall13(state_t *caller){
  * Se il valore in a0 e' >= 14 il current_proc viene ucciso
  *
  *****************************************************************************/
-void support_syscall_handler(state_t* caller){
+static void support_syscall_handler(state_t *caller){
   unsigned int a0 = caller->reg_a0;
   
   if (a0 <= 8 || a0 >= 14) SYSCALL(TERMINATE, 0, 0, 0);
