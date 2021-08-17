@@ -31,7 +31,7 @@ void init_pager()
 	}
 }
 
-void tlb_exception_handler()
+void pager()
 {
 	support_t* cur_proc_sup_ptr;    /* puntatore alla struttura di supporto del current_process */
 	unsigned int exception_code;    /* codice dell'eccezione */             

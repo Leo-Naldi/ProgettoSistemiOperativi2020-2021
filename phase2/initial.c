@@ -2,7 +2,7 @@
 #include "exceptions.h"
 
 extern void test();
-extern void uTLB_RefillHandler();
+extern void tlb_refill_handler();
 
 /* Per utilizzare queste variabili all interno di altri file basta includere ker_exports.h
  * (include anche tutti i moduli di fase 1, proj_lib e umps)*/
@@ -31,7 +31,7 @@ static void initKer()
 {
 
     passupvector_t* pu_vec0 = (passupvector_t*) PASSUPVECTOR; /* lo struct di passupvec_t si trova in umps/types.h */
-    pu_vec0 -> tlb_refill_handler = (memaddr) uTLB_RefillHandler;
+    pu_vec0 -> tlb_refill_handler = (memaddr) tlb_refill_handler;
     pu_vec0 -> tlb_refill_stackPtr = pu_vec0->exception_stackPtr = KERNELSTACK;
     pu_vec0 -> exception_handler = (memaddr) exceHandler; /*(memaddr) funzione creata da noi per gli exception handler */
 

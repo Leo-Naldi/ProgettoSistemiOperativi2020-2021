@@ -11,7 +11,7 @@ PHASE1_SRC := $(notdir $(wildcard $(PHASE1_PATH)/*.c))
 PHASE2_SRC := $(notdir $(wildcard $(PHASE2_PATH)/*.c)) 
 PHASE3_SRC := $(notdir $(wildcard $(PHASE3_PATH)/*.c))
 
-PROJECT_SRC := $(PROJ_LIB_SRC) $(PHASE1_SRC) $(PHASE2_SRC)
+PROJECT_SRC := $(PROJ_LIB_SRC) $(PHASE1_SRC) $(PHASE2_SRC) $(PHASE3_SRC)
 
 PROJECT_OBJ := $(patsubst %.c, $(BUILD_DIR)/%.o, $(PROJECT_SRC)) 
 UMPS_LIB_OBJ := $(BUILD_DIR)/crtso.o $(BUILD_DIR)/libumps.o
@@ -25,13 +25,12 @@ $(shell mkdir -p $(BUILD_DIR))
 $(shell mkdir -p $(DEPS_DIR))
 $(shell mkdir -p $(BIN_DIR))
 
-export P3TEST_PREFIX
 
 .PHONY: all clean help
 
 all : tests $(BIN_DIR)/kernel.core.umps
 
-include $(DEPS)
+-include $(DEPS)
 
 debug: CFLAGS += -D$(DBG_ACTIVE)
 debug: clean

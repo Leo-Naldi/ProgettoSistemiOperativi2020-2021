@@ -4,6 +4,9 @@
 /* Export del livello di supporto */
 
 #include "proj_lib.h"
+#include "general_exception.h"
+#include "pager.h"
+#include "tlbrefill_handler.h"
 
 extern int io_dev_mutex[6][DEVPERINT];  /* Semafori per la mutua esclusione sui device di IO */ 
 

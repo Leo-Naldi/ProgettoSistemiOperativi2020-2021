@@ -6,6 +6,6 @@
 
 void init_pager();
 
-void tlb_exception_handler();
+void pager();
 
 #endif
