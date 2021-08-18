@@ -153,7 +153,7 @@ static void syscall13(state_t *caller){
  * Se il valore in a0 e' >= 14 il current_proc viene ucciso
  *
  *****************************************************************************/
-static void support_syscall_handler(state_t *caller){
+void support_syscall_handler(state_t *caller){
   unsigned int a0 = caller->reg_a0;
   
   if (a0 <= 8 || a0 >= 14) SYSCALL(TERMINATE, 0, 0, 0);

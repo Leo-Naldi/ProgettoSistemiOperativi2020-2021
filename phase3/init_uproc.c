@@ -20,7 +20,7 @@ static void make_uproc(int asid, state_t* out_state, support_t* out_sup)
 {
 	int i;
 	unsigned int excp_status;
-	char* ram_top;
+	unsigned int ram_top;
 
 	excp_status = ALLOFF | IEPON | IMON | TEBITON;
 	RAMTOP(ram_top);
@@ -31,7 +31,8 @@ static void make_uproc(int asid, state_t* out_state, support_t* out_sup)
 	SET_PLT_ON(*out_state);
 	
 	out_state->entry_hi = asid;
-	out_state->pc_epc = out_state->reg_t9 = UPROCSTARTADDR;
+	out_state->pc_epc = UPROCSTARTADDR;
+	out_state->reg_t9 = UPROCSTARTADDR;
 	out_state->reg_sp = USERSTACKTOP;
 
 
@@ -65,7 +66,7 @@ static void init_uprocs()
 	{
 		make_uproc(asid, &(states[asid - 1]), &(supports[asid - 1]));
 
-		SYSCALL(CREATEPROCESS, &(states[asid - 1]), &(supports[asid - 1]), 0);
+		SYSCALL(CREATEPROCESS,(unsigned int) &(states[asid - 1]),(unsigned int) &(supports[asid - 1]), 0);
 	}
 }
 
@@ -78,6 +79,7 @@ void test()
 			io_dev_mutex[i][j] = 1;
 
 	init_pager();
+
 
 	init_uprocs();
 

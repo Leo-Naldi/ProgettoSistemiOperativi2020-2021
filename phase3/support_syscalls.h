@@ -16,6 +16,6 @@
 #include "proj_lib.h"
 #include "sup_exports.h"
 
-static void support_syscall_handler(state_t* caller);
+void support_syscall_handler(state_t* caller);
 
 #endif

@@ -8,18 +8,17 @@ static volatile int swap_pool_sem;         /* semaforo per la mutua esclusione s
 
 static int get_next_swap_index();    /* ritorna l'indice del prossimo frame da usare */
 
-static inline void get_swap_pool_mutex();      /* wrapper per p(swap_pool_sem) */
+static void get_swap_pool_mutex();      /* wrapper per p(swap_pool_sem) */
 
-static inline void release_swap_pool_mutex();  /* wrapper per v(swap_pool_sem) */
+static void release_swap_pool_mutex();  /* wrapper per v(swap_pool_sem) */
 
 static int flash_io(int flash_no, int frame_no, unsigned int block_no, int rw);  /* IO per i device flash 
 																				  * (se rw e' 1 fa write else read) */
-
 static void pagefault_handler(support_t* sup);  /* Pager vero e proprio */
 
 void init_pager()
 {
-	swap_pool_h = SWAP_POOL_START;   /* Vedi proj_lib/pandos_const.h */
+	swap_pool_h = (int*) SWAP_POOL_START;   /* Vedi proj_lib/pandos_const.h */
 	swap_pool_sem = 1;
 	
 	int i;
@@ -61,12 +60,12 @@ void pager()
 }
 
 
-static inline void get_swap_pool_mutex()
+static void get_swap_pool_mutex()
 {
 	SYSCALL(PASSEREN, (int) &swap_pool_sem, 0, 0);
 }
 
-static inline void release_swap_pool_mutex()
+static void release_swap_pool_mutex()
 {
 	SYSCALL(VERHOGEN, (int) &swap_pool_sem, 0, 0);
 }
@@ -109,7 +108,7 @@ static int flash_io(int flash_no, int frame_no, unsigned int block_no, int rw)
 
 	SYSCALL(VERHOGEN, (int) &(io_dev_mutex[FLASH_ROW][flash_no]), 0, 0);
 
-	res = ((res == 1) 0: 1);
+	res = ((res == 1) ? 0: 1);
 
 	return res;
 }
@@ -163,7 +162,7 @@ static void pagefault_handler(support_t* sup)
 		SYSCALL(TERMINATE, 0, 0, 0);
 	}
 	
-	io_error = flash_io(cur_proc_sup_ptr->sup_asid - 1, next_frame_index, page_no, 0);
+	io_error = flash_io(sup->sup_asid - 1, next_frame_index, page_no, 0);
 	
 	if (io_error)
 	{
@@ -178,9 +177,9 @@ static void pagefault_handler(support_t* sup)
 	old_status = getSTATUS();
 	setSTATUS(old_status & (~IECON));
 			
-	(swap_entry->sw_pte).pte_entryLO |= VALIDON;
-	(swap_entry->sw_pte).pte_entryLO &= (~GETPAGENO);
-	(swap_entry->sw_pte).pte_entryLO |= ((swap_pool_h + 1000 * next_frame_index) << VPNSHIFT)
+	(swap_entry->sw_pte)->pte_entryLO |= VALIDON;
+	(swap_entry->sw_pte)->pte_entryLO &= (~GETPAGENO);
+	(swap_entry->sw_pte)->pte_entryLO |= ((unsigned int)(swap_pool_h + 1000 * next_frame_index) << VPNSHIFT);
 	
 	TLBCLR();
 	setSTATUS(old_status);

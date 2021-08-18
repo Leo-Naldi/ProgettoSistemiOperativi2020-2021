@@ -10,10 +10,10 @@ void tlb_refill_handler()
 
 	caller = SAVED_STATE;
 	entry_hi = caller->entry_hi;
-	cur_proc_sup = current_process->p_supportStruct;
+	cur_proc_sup = current_proc->p_supportStruct;
 	
 	page_number = (entry_hi & GETPAGENO) >> VPNSHIFT;
-	page_number = (page_no > 30) ? 31: page_number;
+	page_number = (page_number > 30) ? 31: page_number;
 	
 	new_entry = &((cur_proc_sup->sup_privatePgTbl)[page_number]);
 

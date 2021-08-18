@@ -7,11 +7,13 @@ void gen_excp_handler()
 
 	cur_proc_sup_ptr = (support_t*) SYSCALL(GETSUPPORTPTR, 0, 0, 0);
 	exception_code = CAUSE_GET_EXCCODE((cur_proc_sup_ptr->sup_exceptState)[GENERALEXCEPT].cause);
+	
+	HALT();
 
 	switch (exception_code)
 	{
 		case EXC_SYS:
-			support_syscall_handler((cur_proc_sup_ptr->sup_exceptState)[GENERALEXCEPT]);
+			support_syscall_handler(&(cur_proc_sup_ptr->sup_exceptState)[GENERALEXCEPT]);
 			break;
 		
 		default:
