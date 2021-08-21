@@ -4,11 +4,7 @@
 
 
 /* FUNZIONI PRIVATE */
-
-static void syscall_solved(state_t* s)
-{
-    s->cause &= ~EXC_SYS;
-}
+static void syscall_solved(state_t* s){}
 
 /*
  * Procedura di ritorno per le syscall che bloccano il processo corrente.
@@ -20,8 +16,6 @@ static void ret_blocking(state_t* caller)
     update_cpu_usage(current_proc, &tod_start);
     memcpy(&(current_proc->p_s), caller, sizeof(state_t));
     
-    syscall_solved(&(current_proc->p_s));
-
     current_proc = NULL;
 
     scheduler();

@@ -18,7 +18,7 @@ int io_dev_mutex[6][DEVPERINT];  /* Semafori per la mutua esclusione sui device 
 
 static void make_uproc(int asid, state_t* out_state, support_t* out_sup)
 {
-	int i;
+	unsigned int i;
 	unsigned int excp_status;
 	unsigned int ram_top;
 
@@ -30,7 +30,7 @@ static void make_uproc(int asid, state_t* out_state, support_t* out_sup)
 	SET_ALL_INTERRUPT_ON(*out_state);
 	SET_PLT_ON(*out_state);
 	
-	out_state->entry_hi = asid;
+	out_state->entry_hi = ((unsigned int) asid) << ASIDSHIFT;
 	out_state->pc_epc = UPROCSTARTADDR;
 	out_state->reg_t9 = UPROCSTARTADDR;
 	out_state->reg_sp = USERSTACKTOP;
@@ -40,11 +40,11 @@ static void make_uproc(int asid, state_t* out_state, support_t* out_sup)
 
 	for (i = 0; i < USERPGTBLSIZE - 1; i++)
 	{
-		(out_sup->sup_privatePgTbl)[i].pte_entryHI = 0x80000000 | (i << VPNSHIFT) | (unsigned int) asid;
+		(out_sup->sup_privatePgTbl)[i].pte_entryHI = 0x80000000 | (i << VPNSHIFT) | ((unsigned int) asid << ASIDSHIFT);
 		(out_sup->sup_privatePgTbl)[i].pte_entryLO = DIRTYON;  /* V, G = 0 */
 	}
 	
-	(out_sup->sup_privatePgTbl)[USERPGTBLSIZE - 1].pte_entryHI = 0xBFFFF000 | (unsigned int) asid;
+	(out_sup->sup_privatePgTbl)[USERPGTBLSIZE - 1].pte_entryHI = 0xBFFFF000 | ((unsigned int) asid << ASIDSHIFT);
 	(out_sup->sup_privatePgTbl)[USERPGTBLSIZE - 1].pte_entryLO = DIRTYON;  /* V, G = 0 */
 	
 	(out_sup->sup_exceptContext)[PGFAULTEXCEPT].c_pc = (memaddr) pager; 

@@ -2,9 +2,17 @@
 
 #define SWAPSIZE 16
 
-static int* swap_pool_h;                   /* puntatore all'inizio della swap pool */    
+#ifdef __PANDOS_DEBUGGER_ACTIVE__
+
+#include "debugger.h"
+
+#endif
+
+static unsigned int swap_pool_h;                   /* puntatore all'inizio della swap pool */    
 static swap_t swap_pool_table[SWAPSIZE];   /* swap table */
 static volatile int swap_pool_sem;         /* semaforo per la mutua esclusione sulla swap pool */
+
+#define __GET_FRAME(INDEX) (swap_pool_h + ((INDEX) << VPNSHIFT))
 
 static int get_next_swap_index();    /* ritorna l'indice del prossimo frame da usare */
 
@@ -18,13 +26,13 @@ static void pagefault_handler(support_t* sup);  /* Pager vero e proprio */
 
 void init_pager()
 {
-	swap_pool_h = (int*) SWAP_POOL_START;   /* Vedi proj_lib/pandos_const.h */
+	swap_pool_h = SWAP_POOL_START;   /* Vedi proj_lib/pandos_const.h */
 	swap_pool_sem = 1;
 	
 	int i;
 	for (i = 0; i < SWAPSIZE; i++)
 	{
-		swap_pool_table[i].sw_asid = -1;
+		swap_pool_table[i].sw_asid = NOPROC;
 		swap_pool_table[i].sw_pageNo = -1;
 		swap_pool_table[i].sw_pte = NULL;
 	}
@@ -41,6 +49,12 @@ void pager()
 	switch (exception_code)
 	{
 		case EXC_MOD:
+			
+#ifdef __PANDOS_DEBUGGER_ACTIVE__
+			
+			debug_panic_loc = 1;
+
+#endif
 			PANIC();   /* per debuggare, non dovrebbe succedere in questa fase */
 			break;
 		
@@ -52,10 +66,20 @@ void pager()
 			break;
 		
 		default:
+#ifdef __PANDOS_DEBUGGER_ACTIVE__
+			
+			debug_panic_loc = 2;
+
+#endif
 			PANIC();   /* chiamato l'handler sbagliato */
 			break;
 	}
 	
+#ifdef __PANDOS_DEBUGGER_ACTIVE__
+			
+	debug_panic_loc = 3;
+
+#endif
 	PANIC();  /* Should Not arrive here */
 }
 
@@ -84,12 +108,12 @@ static int get_next_swap_index()
 
 static int flash_io(int flash_no, int frame_no, unsigned int block_no, int rw)
 {
-	int* frame_ptr;            /* Pointer allo swap frame da usare */
+	unsigned int frame_ptr;    /* Pointer allo swap frame da usare */
 	dtpreg_t* flash_reg;       /* Puntatore al registro del flash */
 	int res;        		   /* return value, 0 se la read/write ha avuto successo, else 1 */
 	unsigned int old_status;   /* Var ausiliaria per la sezione atomica */
 
-	frame_ptr = swap_pool_h + frame_no * 1000;
+	frame_ptr = __GET_FRAME(frame_no);
 	flash_reg = (dtpreg_t*) GET_DEVREG_ADDR(4, flash_no);
 	res = 0;
 	rw = ((rw == 1) ? FLASHWRITE: FLASHREAD);   /* 1 -> write to flash, else read from flash */
@@ -99,11 +123,11 @@ static int flash_io(int flash_no, int frame_no, unsigned int block_no, int rw)
 	flash_reg->data0 = (unsigned int) frame_ptr;
 	
 	old_status = getSTATUS();
-	setSTATUS(old_status & (~IECON));
+	setSTATUS(old_status & (~IECON) & (~TEBITON));
 	
-	flash_reg->command = ALLOFF | (block_no << 7) | ((unsigned int) rw);
+	flash_reg->command = ALLOFF | (block_no << 8) | ((unsigned int) rw);
 	res = SYSCALL(IOWAIT, 4, flash_no, 0);
-
+	
 	setSTATUS(old_status);
 
 	SYSCALL(VERHOGEN, (int) &(io_dev_mutex[FLASH_ROW][flash_no]), 0, 0);
@@ -116,6 +140,7 @@ static int flash_io(int flash_no, int frame_no, unsigned int block_no, int rw)
 static void pagefault_handler(support_t* sup)
 {
 	int page_no,             /* Physical page index */
+		page_index,
 		entry_hi,            /* EntryHi reg di caller */
 		next_frame_index,    /* Indice del prossimo ram frame */ 
 		io_error;            /* 1 se un'operazione di scrittura/lettura del flash e' fallita */
@@ -127,11 +152,34 @@ static void pagefault_handler(support_t* sup)
 
 	get_swap_pool_mutex();
 
-	caller = SAVED_STATE;
+	caller = &((sup->sup_exceptState)[PGFAULTEXCEPT]);
 	entry_hi = caller->entry_hi;
 	
-	page_no = (entry_hi & GETPAGENO) >> VPNSHIFT;
-	page_no = (page_no > 30) ? 31: page_no;
+	page_no = (entry_hi & GETPAGENO);
+	
+	switch (page_no)
+	{
+		case (0xBFFFF000 & GETPAGENO):
+			
+			page_index = 31;
+			break;
+		
+		default:
+			page_index = (page_no & (~0x80000000)) >> VPNSHIFT;
+			break;
+	}
+	
+	if ((page_index < 0) || (page_index > 31))
+	{
+#ifdef __PANDOS_DEBUGGER_ACTIVE__
+			
+		debug_panic_loc = 4;
+		debug_page_index = page_index;
+		debug_page_no = page_no;
+
+#endif
+		PANIC();
+	}
 	
 
 	next_frame_index = get_next_swap_index();
@@ -142,7 +190,7 @@ static void pagefault_handler(support_t* sup)
 	{
 		/* ATOMIC */
 		old_status = getSTATUS();
-		setSTATUS(old_status & (~IECON));
+		setSTATUS(old_status & (~IECON) & (~TEBITON));
 			
 		page_pte = swap_entry->sw_pte;
 		
@@ -162,7 +210,7 @@ static void pagefault_handler(support_t* sup)
 		SYSCALL(TERMINATE, 0, 0, 0);
 	}
 	
-	io_error = flash_io(sup->sup_asid - 1, next_frame_index, page_no, 0);
+	io_error = flash_io(sup->sup_asid - 1, next_frame_index, page_index, 0);
 	
 	if (io_error)
 	{
@@ -171,15 +219,15 @@ static void pagefault_handler(support_t* sup)
 	}
 	
 	swap_entry->sw_asid = sup->sup_asid;
-	swap_entry->sw_pageNo = page_no;
-	swap_entry->sw_pte = &((sup->sup_privatePgTbl)[page_no]);
+	swap_entry->sw_pageNo = page_index;
+	swap_entry->sw_pte = &((sup->sup_privatePgTbl)[page_index]);
 
 	old_status = getSTATUS();
-	setSTATUS(old_status & (~IECON));
+	setSTATUS(old_status & (~IECON) & (~TEBITON));
 			
 	(swap_entry->sw_pte)->pte_entryLO |= VALIDON;
-	(swap_entry->sw_pte)->pte_entryLO &= (~GETPAGENO);
-	(swap_entry->sw_pte)->pte_entryLO |= ((unsigned int)(swap_pool_h + 1000 * next_frame_index) << VPNSHIFT);
+	(swap_entry->sw_pte)->pte_entryLO &= (~(MAXINT << VPNSHIFT));
+	(swap_entry->sw_pte)->pte_entryLO |= ((unsigned int)(__GET_FRAME(next_frame_index)) << VPNSHIFT);
 	
 	TLBCLR();
 	setSTATUS(old_status);

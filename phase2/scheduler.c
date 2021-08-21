@@ -28,19 +28,14 @@ void scheduler()
 	{
 		/* abilita gli interrupt */
 		setSTATUS((getSTATUS() | IECON | IMON) & TEBITOFF);
-
+		
 		WAIT(); /* Calm */
 	}
 	else /* ready_q vuota, process_count > 0, process_sb == 0 */
 	{
-
-		if (process_count < 0)
-		{
-			term_puts("HAHAHAHAHAHA\n");
-		}
-
 		term_puts("Deadlock Detected\n");
 		/* Panik */
-		PANIC();
+
+		HALT();
 	}
 }
