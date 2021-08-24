@@ -72,7 +72,6 @@ static void initKer()
 
 int main()
 {
-    setSTATUS(0);
 	initKer();	
  
     LDIT(PSECOND); /* Inizializza il system wide timer con 100ms */

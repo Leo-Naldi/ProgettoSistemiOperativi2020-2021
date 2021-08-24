@@ -209,7 +209,14 @@
 #define INSTALLED_DEV_BITMAP 0x1000002C
 #define INTERRUPT_DEV_BITMAP 0x10000040
 
+/* PHASE 3 */
+
+#define UPROC_VIRT_STACK 0xBFFFF000
+
 #define SWAP_POOL_START 0x20020000
+
+#define GETVPN 0xFFFFF000
+
 
 /* End of Project-defined constants */
 

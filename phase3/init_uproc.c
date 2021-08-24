@@ -49,11 +49,11 @@ static void make_uproc(int asid, state_t* out_state, support_t* out_sup)
 	
 	(out_sup->sup_exceptContext)[PGFAULTEXCEPT].c_pc = (memaddr) pager; 
 	(out_sup->sup_exceptContext)[PGFAULTEXCEPT].c_status = excp_status;
-	(out_sup->sup_exceptContext)[PGFAULTEXCEPT].c_stackPtr = ram_top - asid * 8000 + 4000;
+	(out_sup->sup_exceptContext)[PGFAULTEXCEPT].c_stackPtr = ram_top - asid * PAGESIZE * 2 + PAGESIZE;
 	
 	(out_sup->sup_exceptContext)[GENERALEXCEPT].c_pc = (memaddr) gen_excp_handler;
 	(out_sup->sup_exceptContext)[GENERALEXCEPT].c_status = excp_status;
-	(out_sup->sup_exceptContext)[GENERALEXCEPT].c_stackPtr = ram_top - asid * 8000;
+	(out_sup->sup_exceptContext)[GENERALEXCEPT].c_stackPtr = ram_top - asid * PAGESIZE * 2;
 }
 
 static void init_uprocs()

@@ -35,7 +35,6 @@ void scheduler()
 	{
 		term_puts("Deadlock Detected\n");
 		/* Panik */
-
-		HALT();
+		PANIC();
 	}
 }

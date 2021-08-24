@@ -13,7 +13,6 @@ void gen_excp_handler()
 	switch (exception_code)
 	{
 		case EXC_SYS:
-			HALT();
 			support_syscall_handler(caller);
 			break;
 		

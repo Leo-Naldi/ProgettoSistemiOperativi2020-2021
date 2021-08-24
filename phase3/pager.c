@@ -20,8 +20,8 @@ static void get_swap_pool_mutex();      /* wrapper per p(swap_pool_sem) */
 
 static void release_swap_pool_mutex();  /* wrapper per v(swap_pool_sem) */
 
-static int flash_io(int flash_no, int frame_no, unsigned int block_no, int rw);  /* IO per i device flash 
-																				  * (se rw e' 1 fa write else read) */
+static int flash_io(unsigned int flash_no, int frame_no, unsigned int block_no, unsigned int command);
+
 static void pagefault_handler(support_t* sup);  /* Pager vero e proprio */
 
 void init_pager()
@@ -106,40 +106,46 @@ static int get_next_swap_index()
 	return res;
 }
 
-static int flash_io(int flash_no, int frame_no, unsigned int block_no, int rw)
+static int flash_io(unsigned int flash_no, int frame_no, unsigned int block_no, unsigned int command)
 {
-	unsigned int frame_ptr;    /* Pointer allo swap frame da usare */
-	dtpreg_t* flash_reg;       /* Puntatore al registro del flash */
-	int res;        		   /* return value, 0 se la read/write ha avuto successo, else 1 */
-	unsigned int old_status;   /* Var ausiliaria per la sezione atomica */
-
-	frame_ptr = __GET_FRAME(frame_no);
-	flash_reg = (dtpreg_t*) GET_DEVREG_ADDR(4, flash_no);
-	res = 0;
-	rw = ((rw == 1) ? FLASHWRITE: FLASHREAD);   /* 1 -> write to flash, else read from flash */
+#ifdef __PANDOS_DEBUGGER_ACTIVE__
+			
+	if ((command != FLASHREAD) && (command != FLASHWRITE))
+	{
+		debug_panic_loc = 6;
+		PANIC();
+	}
 	
-	SYSCALL(PASSEREN, (int) &(io_dev_mutex[FLASH_ROW][flash_no]), 0, 0);
+	if (block_no > 31)
+	{
+		debug_panic_loc = 7;
+		PANIC();
+	}
+#endif
 
-	flash_reg->data0 = (unsigned int) frame_ptr;
-	
+	unsigned int frame_ptr,
+				 old_status,
+				 res;
+	dtpreg_t* flas_reg_ptr;
+
+	frame_ptr = (unsigned int) __GET_FRAME(frame_no);
+	flas_reg_ptr = (dtpreg_t*) GET_DEVREG_ADDR(4, flash_no);
+
 	old_status = getSTATUS();
 	setSTATUS(old_status & (~IECON) & (~TEBITON));
 	
-	flash_reg->command = ALLOFF | (block_no << 8) | ((unsigned int) rw);
+	flas_reg_ptr->data0 = frame_ptr;
+	flas_reg_ptr->command = (block_no << 8) | command;
 	res = SYSCALL(IOWAIT, 4, flash_no, 0);
-	
+
 	setSTATUS(old_status);
-
-	SYSCALL(VERHOGEN, (int) &(io_dev_mutex[FLASH_ROW][flash_no]), 0, 0);
-
-	res = ((res == 1) ? 0: 1);
 
 	return res;
 }
 
 static void pagefault_handler(support_t* sup)
 {
-	int page_no,             /* Physical page index */
+	unsigned int page_no,             /* Physical page index */
 		page_index,
 		entry_hi,            /* EntryHi reg di caller */
 		next_frame_index,    /* Indice del prossimo ram frame */ 
@@ -201,18 +207,18 @@ static void pagefault_handler(support_t* sup)
 		/* FINE ATOMIC */
 		setSTATUS(old_status);
 		
-		io_error = flash_io(swap_entry->sw_asid - 1, next_frame_index, swap_entry->sw_pageNo, 1);
+		io_error = flash_io(swap_entry->sw_asid - 1, next_frame_index, swap_entry->sw_pageNo, FLASHWRITE);
 	}
 
-	if (io_error)
+	if (io_error != 1)
 	{
 		release_swap_pool_mutex();
 		SYSCALL(TERMINATE, 0, 0, 0);
 	}
 	
-	io_error = flash_io(sup->sup_asid - 1, next_frame_index, page_index, 0);
+	io_error = flash_io(sup->sup_asid - 1, next_frame_index, page_index, FLASHREAD);
 	
-	if (io_error)
+	if (io_error != 1)
 	{
 		release_swap_pool_mutex();
 		SYSCALL(TERMINATE, 0, 0, 0);

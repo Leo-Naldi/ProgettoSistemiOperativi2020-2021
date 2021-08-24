@@ -19,21 +19,21 @@ void tlb_refill_handler()
 	entry_hi = caller->entry_hi;
 	cur_proc_sup = current_proc->p_supportStruct;
 	
-	page_number = (entry_hi & GETPAGENO);
+	page_number = entry_hi & GETPAGENO;
 
 	switch (page_number)
 	{
-		case (0xBFFFF000 & GETPAGENO):
+		case (UPROC_VIRT_STACK & GETPAGENO):
 			
 			page_index = 31;
 			break;
 		
 		default:
-			page_index = (page_number & (~0x80000000)) >> VPNSHIFT;
+			page_index = page_number >> VPNSHIFT;
 			break;
 	}
 	
-	if ((page_index < 0) || (page_index > 31))
+	if (page_index > 31)
 	{
 #ifdef __PANDOS_DEBUGGER_ACTIVE__
 
