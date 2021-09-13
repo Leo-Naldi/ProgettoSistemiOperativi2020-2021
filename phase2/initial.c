@@ -64,10 +64,17 @@ static void initKer()
     insertProcQ(&ready_q, current_proc);
     current_proc = NULL;
     process_count++;
-
-    memset(&ds, 0, sizeof(dev_sem_list_t)); /* Setta i valori di tutti i sem a 0 */
-
+    
     dev_sem = &ds;
+    
+    int i, j;
+
+    for (i = 0; i < 6; i++)
+        for (j = 0; j < DEVPERINT; j ++)
+            (dev_sem->sem_mat)[i][j] = 0;
+
+    dev_sem->sys_timer = 0;
+
 }
 
 int main()

@@ -33,7 +33,6 @@ void scheduler()
 	}
 	else /* ready_q vuota, process_count > 0, process_sb == 0 */
 	{
-		term_puts("Deadlock Detected\n");
 		/* Panik */
 		PANIC();
 	}

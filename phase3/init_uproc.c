@@ -16,14 +16,15 @@
 int io_dev_mutex[6][DEVPERINT];  /* Semafori per la mutua esclusione sui device di IO */ 
 								 /* Macro per le righe in sup_exports.h */
 
-static void make_uproc(int asid, state_t* out_state, support_t* out_sup)
+
+static unsigned int ram_top;
+
+static void make_uproc(unsigned int asid, state_t* out_state, support_t* out_sup)
 {
 	unsigned int i;
 	unsigned int excp_status;
-	unsigned int ram_top;
 
 	excp_status = ALLOFF | IEPON | IMON | TEBITON;
-	RAMTOP(ram_top);
 
 	out_state->status = ALLOFF | KUPBITON;
 	
@@ -40,11 +41,11 @@ static void make_uproc(int asid, state_t* out_state, support_t* out_sup)
 
 	for (i = 0; i < USERPGTBLSIZE - 1; i++)
 	{
-		(out_sup->sup_privatePgTbl)[i].pte_entryHI = 0x80000000 | (i << VPNSHIFT) | ((unsigned int) asid << ASIDSHIFT);
+		(out_sup->sup_privatePgTbl)[i].pte_entryHI = 0x80000000 | (i << VPNSHIFT) | (asid << ASIDSHIFT);
 		(out_sup->sup_privatePgTbl)[i].pte_entryLO = DIRTYON;  /* V, G = 0 */
 	}
 	
-	(out_sup->sup_privatePgTbl)[USERPGTBLSIZE - 1].pte_entryHI = 0xBFFFF000 | ((unsigned int) asid << ASIDSHIFT);
+	(out_sup->sup_privatePgTbl)[USERPGTBLSIZE - 1].pte_entryHI = UPROC_VIRT_STACK | (asid << ASIDSHIFT);
 	(out_sup->sup_privatePgTbl)[USERPGTBLSIZE - 1].pte_entryLO = DIRTYON;  /* V, G = 0 */
 	
 	(out_sup->sup_exceptContext)[PGFAULTEXCEPT].c_pc = (memaddr) pager; 
@@ -60,13 +61,15 @@ static void init_uprocs()
 {
 	static state_t states[UPROCMAX];
 	static support_t supports[UPROCMAX];
-	int asid;
-	
+	unsigned int asid;
+
+	RAMTOP(ram_top);
+
 	for (asid = 1; asid <= UPROCMAX; asid++)
 	{
 		make_uproc(asid, &(states[asid - 1]), &(supports[asid - 1]));
 
-		SYSCALL(CREATEPROCESS,(unsigned int) &(states[asid - 1]),(unsigned int) &(supports[asid - 1]), 0);
+		SYSCALL(CREATEPROCESS,(int) &(states[asid - 1]),(int) &(supports[asid - 1]), 0);
 	}
 }
 
@@ -79,7 +82,6 @@ void test()
 			io_dev_mutex[i][j] = 1;
 
 	init_pager();
-
 
 	init_uprocs();
 

@@ -72,3 +72,13 @@ void update_cpu_usage(pcb_t* p, cpu_t* starting_time)
 
 	STCK(*starting_time);
 }
+
+unsigned int get_asid(unsigned int entry_hi)
+{
+	return (entry_hi & GETASID) >> ASIDSHIFT;
+}
+
+unsigned int get_pageno(unsigned int entry_hi)
+{
+	return (entry_hi & GETPAGENO) >> VPNSHIFT;  
+}

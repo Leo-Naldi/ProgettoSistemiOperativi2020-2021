@@ -68,5 +68,15 @@ void* memcpy(void* dest, const void* src, size_t n);
 
 void update_cpu_usage(pcb_t* p, cpu_t* starting_time);
 
+/*
+ * Ritorna il campo ASID dal valore dato di entryHI
+ */
+unsigned int get_asid(unsigned int entry_hi);
+
+/*
+ * Ritorna il campo VPN di entryHI
+ * */
+unsigned int get_pageno(unsigned int entry_hi);
+
 #endif
 

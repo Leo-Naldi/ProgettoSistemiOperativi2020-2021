@@ -11,4 +11,13 @@ unsigned int debug_entry_hi = 0;
 
 int debugger_asid = -1;
 
+int debug_flash_status = 0;
+
+int debug_tlbrefill_count = 0;
+int debug_pager_count = 0;
+
+unsigned int debug_badvaddr = 0;
+
+unsigned int debug_cur_running = 0;
+
 #endif

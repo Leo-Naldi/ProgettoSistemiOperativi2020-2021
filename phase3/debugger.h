@@ -10,6 +10,14 @@ extern unsigned int debug_entry_hi;
 
 extern int debugger_asid;
 
+extern int debug_flash_status;
+
+extern int debug_tlbrefill_count;
+extern int debug_pager_count;
+
+extern unsigned int debug_badvaddr;
+extern unsigned int debug_cur_running;
+
 #endif
 
 #endif

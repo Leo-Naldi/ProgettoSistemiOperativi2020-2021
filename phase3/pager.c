@@ -12,7 +12,7 @@ static unsigned int swap_pool_h;                   /* puntatore all'inizio della
 static swap_t swap_pool_table[SWAPSIZE];   /* swap table */
 static volatile int swap_pool_sem;         /* semaforo per la mutua esclusione sulla swap pool */
 
-#define __GET_FRAME(INDEX) (swap_pool_h + ((INDEX) << VPNSHIFT))
+#define __GET_FRAME(INDEX) (swap_pool_h + ((INDEX) * PAGESIZE))
 
 static int get_next_swap_index();    /* ritorna l'indice del prossimo frame da usare */
 
@@ -128,7 +128,7 @@ static int flash_io(unsigned int flash_no, int frame_no, unsigned int block_no, 
 				 res;
 	dtpreg_t* flas_reg_ptr;
 
-	frame_ptr = (unsigned int) __GET_FRAME(frame_no);
+	frame_ptr =  __GET_FRAME(frame_no);
 	flas_reg_ptr = (dtpreg_t*) GET_DEVREG_ADDR(4, flash_no);
 
 	old_status = getSTATUS();
@@ -145,11 +145,17 @@ static int flash_io(unsigned int flash_no, int frame_no, unsigned int block_no, 
 
 static void pagefault_handler(support_t* sup)
 {
+#ifdef __PANDOS_DEBUGGER_ACTIVE__
+
+	debug_pager_count++;
+
+#endif
+
 	unsigned int page_no,             /* Physical page index */
 		page_index,
 		entry_hi,            /* EntryHi reg di caller */
 		next_frame_index,    /* Indice del prossimo ram frame */ 
-		io_error;            /* 1 se un'operazione di scrittura/lettura del flash e' fallita */
+		io_val;            /* 1 se un'operazione di scrittura/lettura del flash e' fallita */
 	
 	state_t* caller;             /* Exception state */
 	unsigned int old_status;     /* Usata per spegnere gli interrupt */
@@ -161,38 +167,26 @@ static void pagefault_handler(support_t* sup)
 	caller = &((sup->sup_exceptState)[PGFAULTEXCEPT]);
 	entry_hi = caller->entry_hi;
 	
-	page_no = (entry_hi & GETPAGENO);
+	page_no = get_pageno(entry_hi);  /* proj_lib */
 	
-	switch (page_no)
-	{
-		case (0xBFFFF000 & GETPAGENO):
-			
-			page_index = 31;
-			break;
-		
-		default:
-			page_index = (page_no & (~0x80000000)) >> VPNSHIFT;
-			break;
-	}
+	page_index = ((page_no == UPROC_VIRT_STACK_PAGENO) ? 31:page_no);
 	
-	if ((page_index < 0) || (page_index > 31))
-	{
 #ifdef __PANDOS_DEBUGGER_ACTIVE__
-			
+	if (page_index > 31)
+	{	
 		debug_panic_loc = 4;
 		debug_page_index = page_index;
 		debug_page_no = page_no;
 
-#endif
 		PANIC();
 	}
-	
+#endif
 
 	next_frame_index = get_next_swap_index();
-	io_error = 0;
+	io_val = 1;
 	swap_entry = &(swap_pool_table[next_frame_index]);
 
-	if (swap_entry->sw_asid != -1)  /* Occupied */
+	if (swap_entry->sw_asid != NOPROC)  /* Occupied */
 	{
 		/* ATOMIC */
 		old_status = getSTATUS();
@@ -207,20 +201,30 @@ static void pagefault_handler(support_t* sup)
 		/* FINE ATOMIC */
 		setSTATUS(old_status);
 		
-		io_error = flash_io(swap_entry->sw_asid - 1, next_frame_index, swap_entry->sw_pageNo, FLASHWRITE);
+		io_val = flash_io(swap_entry->sw_asid - 1, next_frame_index, swap_entry->sw_pageNo, FLASHWRITE);
 	}
 
-	if (io_error != 1)
+	if (io_val != 1)
 	{
 		release_swap_pool_mutex();
+#ifdef __PANDOS_DEBUGGER_ACTIVE__
+		debug_panic_loc = 11;
+		debug_flash_status = io_val;
+#endif
+		PANIC();
 		SYSCALL(TERMINATE, 0, 0, 0);
 	}
 	
-	io_error = flash_io(sup->sup_asid - 1, next_frame_index, page_index, FLASHREAD);
+	io_val = flash_io(sup->sup_asid - 1, next_frame_index, page_index, FLASHREAD);
 	
-	if (io_error != 1)
+	if (io_val != 1)
 	{
 		release_swap_pool_mutex();
+#ifdef __PANDOS_DEBUGGER_ACTIVE__
+		debug_panic_loc = 12;
+		debug_flash_status = io_val;
+#endif
+		PANIC();
 		SYSCALL(TERMINATE, 0, 0, 0);
 	}
 	
@@ -233,7 +237,7 @@ static void pagefault_handler(support_t* sup)
 			
 	(swap_entry->sw_pte)->pte_entryLO |= VALIDON;
 	(swap_entry->sw_pte)->pte_entryLO &= (~(MAXINT << VPNSHIFT));
-	(swap_entry->sw_pte)->pte_entryLO |= ((unsigned int)(__GET_FRAME(next_frame_index)) << VPNSHIFT);
+	(swap_entry->sw_pte)->pte_entryLO |= ((__GET_FRAME(next_frame_index)) << VPNSHIFT);
 	
 	TLBCLR();
 	setSTATUS(old_status);

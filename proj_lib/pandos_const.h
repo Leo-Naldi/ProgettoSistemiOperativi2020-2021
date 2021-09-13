@@ -217,6 +217,9 @@
 
 #define GETVPN 0xFFFFF000
 
+#define GETASID 0x00000FC0
+
+#define UPROC_VIRT_STACK_PAGENO ((UPROC_VIRT_STACK & GETPAGENO) >> VPNSHIFT)
 
 /* End of Project-defined constants */
 
