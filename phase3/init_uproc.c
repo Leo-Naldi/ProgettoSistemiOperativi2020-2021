@@ -18,6 +18,8 @@ int io_dev_mutex[6][DEVPERINT];  /* Semafori per la mutua esclusione sui device 
 
 
 static unsigned int ram_top;
+static state_t states[UPROCMAX];
+static support_t supports[UPROCMAX];
 
 static void make_uproc(unsigned int asid, state_t* out_state, support_t* out_sup)
 {
@@ -43,6 +45,11 @@ static void make_uproc(unsigned int asid, state_t* out_state, support_t* out_sup
 	{
 		(out_sup->sup_privatePgTbl)[i].pte_entryHI = 0x80000000 | (i << VPNSHIFT) | (asid << ASIDSHIFT);
 		(out_sup->sup_privatePgTbl)[i].pte_entryLO = DIRTYON;  /* V, G = 0 */
+
+		if (get_pageno((out_sup->sup_privatePgTbl)[i].pte_entryHI) >= 31)
+		{
+			HALT();
+		}
 	}
 	
 	(out_sup->sup_privatePgTbl)[USERPGTBLSIZE - 1].pte_entryHI = UPROC_VIRT_STACK | (asid << ASIDSHIFT);
@@ -59,8 +66,6 @@ static void make_uproc(unsigned int asid, state_t* out_state, support_t* out_sup
 
 static void init_uprocs()
 {
-	static state_t states[UPROCMAX];
-	static support_t supports[UPROCMAX];
 	unsigned int asid;
 
 	RAMTOP(ram_top);
@@ -68,8 +73,6 @@ static void init_uprocs()
 	for (asid = 1; asid <= UPROCMAX; asid++)
 	{
 		make_uproc(asid, &(states[asid - 1]), &(supports[asid - 1]));
-
-		SYSCALL(CREATEPROCESS,(int) &(states[asid - 1]),(int) &(supports[asid - 1]), 0);
 	}
 }
 
@@ -84,6 +87,11 @@ void test()
 	init_pager();
 
 	init_uprocs();
+
+	for (i = 1; i <= UPROCMAX; i++)
+	{
+		SYSCALL(CREATEPROCESS,(int) &(states[i - 1]),(int) &(supports[i - 1]), 0);
+	}
 
 	i = 0;
 

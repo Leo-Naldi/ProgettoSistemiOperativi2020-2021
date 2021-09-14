@@ -235,9 +235,7 @@ static void pagefault_handler(support_t* sup)
 	old_status = getSTATUS();
 	setSTATUS(old_status & (~IECON) & (~TEBITON));
 			
-	(swap_entry->sw_pte)->pte_entryLO |= VALIDON;
-	(swap_entry->sw_pte)->pte_entryLO &= (~(MAXINT << VPNSHIFT));
-	(swap_entry->sw_pte)->pte_entryLO |= ((__GET_FRAME(next_frame_index)) << VPNSHIFT);
+	(swap_entry->sw_pte)->pte_entryLO = __GET_FRAME(next_frame_index) | VALIDON | DIRTYON;
 	
 	TLBCLR();
 	setSTATUS(old_status);
