@@ -82,28 +82,41 @@ static void syscall11(state_t *caller){
  *************************************************/
 
 static void syscall12(state_t *caller){
+  unsigned int old_status;
+  int i;
+
   char *virtAddr = (char*) caller->reg_a1;
   int len = caller->reg_a2;
   
-  if( (((unsigned int) virtAddr) < KUSEG) || (((unsigned int) virtAddr) > MAXINT) || (len < 0) || (len > 128)) syscall9(caller);
+  if( (((unsigned int) virtAddr) < KUSEG) || (len < 0) || (len > 128)) syscall9(caller);
   unsigned int car_tr = 0;
   unsigned int devno = get_asid(caller->entry_hi) - 1; /* (ASID - 1) % 8 */
-  devregtr *base = (devregtr*) GET_DEVREG_ADDR(PRNTINT, devno);
+  termreg_t *base = (termreg_t*) GET_DEVREG_ADDR(7, devno);
   devregtr status;
 
-  SYSCALL(PASSEREN, io_dev_mutex[TERMW_ROW][devno], 0, 0);
-  while(*virtAddr != EOS){
-    *(base + 3) = PRINTCHR | (((devregtr) *virtAddr) << BYTELEN);
+  i = 0;
+
+
+  SYSCALL(PASSEREN, (int) &(io_dev_mutex[TERMW_ROW][devno]), 0, 0);
+  while(i < len){
+    
+    old_status = getSTATUS();
+	setSTATUS(old_status & (~IECON) & (~TEBITON));
+    
+    base->transm_command = PRINTCHR | (((devregtr) (virtAddr[i])) << BYTELEN);
     status = SYSCALL(WAITIO, TERMINT, devno, 0);
+    
+    setSTATUS(old_status);
+    
     if((status & 0xFF) != 5){ /* controlla se character transmitted */
-      SYSCALL(VERHOGEN, io_dev_mutex[TERMW_ROW][devno], 0, 0);
+      SYSCALL(VERHOGEN, (int) &(io_dev_mutex[TERMW_ROW][devno]), 0, 0);
       caller->reg_v0 = -1 * status;
       LDST(caller);
     }
     car_tr++;
-    virtAddr++;
+    i++;
   }
-  SYSCALL(VERHOGEN, io_dev_mutex[TERMW_ROW][devno], 0, 0);
+  SYSCALL(VERHOGEN, (int) &(io_dev_mutex[TERMW_ROW][devno]), 0, 0);
   caller->reg_v0 = car_tr;
   LDST(caller);
 }
