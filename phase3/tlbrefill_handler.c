@@ -33,7 +33,7 @@ void tlb_refill_handler()
 	{
 #ifdef __PANDOS_DEBUGGER_ACTIVE__
 
-		debug_panic_loc = 5;
+		debug_panic_loc = DEBUG_TLBREFILL_HANDLER_ID + 1;
 		debug_badvaddr = getBADVADDR();
 		debug_page_index = page_index;
 		debug_page_no = page_number;
@@ -47,20 +47,6 @@ void tlb_refill_handler()
 	setENTRYHI(new_entry->pte_entryHI);
 	setENTRYLO(new_entry->pte_entryLO);
 	
-#ifdef __PANDOS_DEBUGGER_ACTIVE__
-
-
-	page_number = get_pageno(new_entry->pte_entryHI);  /* proj_lib */
-	
-	page_index = ((page_number == UPROC_VIRT_STACK_PAGENO) ? 31:page_number);
-
-	if (page_index > 31)
-	{
-		HALT();
-	}
-
-#endif
-
 	TLBWR();
 	
 	LDST(caller);

@@ -20,4 +20,9 @@ unsigned int debug_badvaddr = 0;
 
 unsigned int debug_cur_running = 0;
 
+
+unsigned int debug_cause = 0;
+
+unsigned int debug_exc_code = 0;
+
 #endif

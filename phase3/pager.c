@@ -52,7 +52,7 @@ void pager()
 			
 #ifdef __PANDOS_DEBUGGER_ACTIVE__
 			
-			debug_panic_loc = 1;
+			debug_panic_loc = DEBUG_PAGER_ID + 1;
 
 #endif
 			PANIC();   /* per debuggare, non dovrebbe succedere in questa fase */
@@ -68,7 +68,7 @@ void pager()
 		default:
 #ifdef __PANDOS_DEBUGGER_ACTIVE__
 			
-			debug_panic_loc = 2;
+			debug_panic_loc = DEBUG_PAGER_ID + 2;
 
 #endif
 			PANIC();   /* chiamato l'handler sbagliato */
@@ -77,7 +77,7 @@ void pager()
 	
 #ifdef __PANDOS_DEBUGGER_ACTIVE__
 			
-	debug_panic_loc = 3;
+	debug_panic_loc = DEBUG_PAGER_ID + 3;
 
 #endif
 	PANIC();  /* Should Not arrive here */
@@ -112,13 +112,13 @@ static int flash_io(unsigned int flash_no, int frame_no, unsigned int block_no, 
 			
 	if ((command != FLASHREAD) && (command != FLASHWRITE))
 	{
-		debug_panic_loc = 6;
+		debug_panic_loc = DEBUG_PAGER_ID + 6;
 		PANIC();
 	}
 	
 	if (block_no > 31)
 	{
-		debug_panic_loc = 7;
+		debug_panic_loc = DEBUG_PAGER_ID + 7;
 		PANIC();
 	}
 #endif
@@ -174,7 +174,7 @@ static void pagefault_handler(support_t* sup)
 #ifdef __PANDOS_DEBUGGER_ACTIVE__
 	if (page_index > 31)
 	{	
-		debug_panic_loc = 4;
+		debug_panic_loc = DEBUG_PAGER_ID + 4;
 		debug_page_index = page_index;
 		debug_page_no = page_no;
 
@@ -208,7 +208,7 @@ static void pagefault_handler(support_t* sup)
 	{
 		release_swap_pool_mutex();
 #ifdef __PANDOS_DEBUGGER_ACTIVE__
-		debug_panic_loc = 11;
+		debug_panic_loc = DEBUG_PAGER_ID + 11;
 		debug_flash_status = io_val;
 #endif
 		PANIC();
@@ -221,7 +221,7 @@ static void pagefault_handler(support_t* sup)
 	{
 		release_swap_pool_mutex();
 #ifdef __PANDOS_DEBUGGER_ACTIVE__
-		debug_panic_loc = 12;
+		debug_panic_loc = DEBUG_PAGER_ID + 12;
 		debug_flash_status = io_val;
 #endif
 		PANIC();
