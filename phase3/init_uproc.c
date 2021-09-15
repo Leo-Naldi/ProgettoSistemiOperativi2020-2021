@@ -13,7 +13,7 @@
 #include "pager.h"
 
 
-int io_dev_mutex[6][DEVPERINT];  /* Semafori per la mutua esclusione sui device di IO */ 
+int io_dev_mutex[6][8];  /* Semafori per la mutua esclusione sui device di IO */ 
 								 /* Macro per le righe in sup_exports.h */
 
 
@@ -81,18 +81,21 @@ void test()
 	int i, j;
 
 	for (i = 0; i < 6; i++)
-		for (j = 0; j < DEVPERINT; j++)
+		for (j = 0; j < 8; j++)
 			io_dev_mutex[i][j] = 1;
 
 	init_pager();
-
+		
 	init_uprocs();
-
-	for (i = 1; i <= UPROCMAX; i++)
+	
+	/*for (i = 0; i <= UPROCMAX; i++)
 	{
-		SYSCALL(CREATEPROCESS,(int) &(states[i - 1]),(int) &(supports[i - 1]), 0);
-	}
+		SYSCALL(CREATEPROCESS,(int) &(states[i]),(int) &(supports[i]), 0);
+	}*/
 
+	i = 0;
+	SYSCALL(CREATEPROCESS,(int) &(states[i]),(int) &(supports[i]), 0);
+	
 	i = 0;
 
 	SYSCALL(PASSEREN, (int) &(i), 0, 0);   /* Finira' con un panic */
