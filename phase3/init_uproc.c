@@ -88,13 +88,11 @@ void test()
 		
 	init_uprocs();
 	
-	/*for (i = 0; i <= UPROCMAX; i++)
+	for (i = 0; i < UPROCMAX; i++)
 	{
 		SYSCALL(CREATEPROCESS,(int) &(states[i]),(int) &(supports[i]), 0);
-	}*/
+	}
 
-	i = 0;
-	SYSCALL(CREATEPROCESS,(int) &(states[i]),(int) &(supports[i]), 0);
 	
 	i = 0;
 
