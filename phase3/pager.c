@@ -143,6 +143,29 @@ static int flash_io(unsigned int flash_no, int frame_no, unsigned int block_no, 
 	return res;
 }
 
+static void invalid_tlb_entry(unsigned int entry_hi, unsigned int new_entry_hi, unsigned int new_entry_lo)
+{
+	unsigned int old_entry_hi;
+	unsigned int old_entry_lo;
+
+	old_entry_hi = getENTRYHI();
+	old_entry_lo = getENTRYLO();
+
+	setENTRYHI(entry_hi);
+	TLBP();
+
+	if ((getINDEX() & 0x80000000) == 0)
+	{
+		setENTRYHI(new_entry_hi);
+		setENTRYLO(new_entry_lo);
+
+		TLBWI();
+	}
+
+	setENTRYHI(old_entry_hi);
+	setENTRYLO(old_entry_lo);
+}
+
 static void pagefault_handler(support_t* sup)
 {
 #ifdef __PANDOS_DEBUGGER_ACTIVE__
@@ -151,8 +174,8 @@ static void pagefault_handler(support_t* sup)
 
 #endif
 
-	unsigned int page_no,             /* Physical page index */
-		page_index,
+	unsigned int page_no,    /* Logical page number */
+		page_index,          /* Indice della pagina */
 		entry_hi,            /* EntryHi reg di caller */
 		next_frame_index,    /* Indice del prossimo ram frame */ 
 		io_val;            /* 1 se un'operazione di scrittura/lettura del flash e' fallita */
@@ -196,7 +219,7 @@ static void pagefault_handler(support_t* sup)
 		
 		page_pte->pte_entryLO &= (~VALIDON);   /* Macro in pandos_const */
 		
-		TLBCLR();  /* Per ora buttiamo via la cache sempre */
+		invalid_tlb_entry(page_pte->pte_entryHI, page_pte->pte_entryHI, page_pte->pte_entryLO);
 
 		/* FINE ATOMIC */
 		setSTATUS(old_status);
@@ -236,8 +259,9 @@ static void pagefault_handler(support_t* sup)
 	setSTATUS(old_status & (~IECON) & (~TEBITON));
 			
 	(swap_entry->sw_pte)->pte_entryLO = __GET_FRAME(next_frame_index) | VALIDON | DIRTYON;
-	
-	TLBCLR();
+
+	invalid_tlb_entry((swap_entry->sw_pte)->pte_entryHI, (swap_entry->sw_pte)->pte_entryHI, (swap_entry->sw_pte)->pte_entryLO);
+
 	setSTATUS(old_status);
 
 	release_swap_pool_mutex();
@@ -245,8 +269,18 @@ static void pagefault_handler(support_t* sup)
 	LDST(caller);
 }
 
+void mark_all_unoccupied(unsigned int asid)
+{
+	int i;
 
-
+	for (i = 0; i < SWAPSIZE; i++)
+	{
+		if (swap_pool_table->sw_asid == asid)
+		{
+			(swap_pool_table[i]).sw_asid = NOPROC;
+		}
+	}
+}
 
 
 

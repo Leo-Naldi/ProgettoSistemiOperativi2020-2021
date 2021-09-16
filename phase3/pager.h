@@ -8,4 +8,6 @@ void init_pager();
 
 void pager();
 
+void mark_all_unoccupied(unsigned int asid);
+
 #endif

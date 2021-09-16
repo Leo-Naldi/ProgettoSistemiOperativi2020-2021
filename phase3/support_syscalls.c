@@ -13,7 +13,9 @@ typedef unsigned int devregtr;
  *************************************************/
 
 static void syscall9(state_t *caller){
-  
+ 
+  mark_all_unoccupied(get_asid(caller->entry_hi));
+
   SYSCALL(VERHOGEN, (int) &master_sem, 0, 0);
   SYSCALL(TERMINATEPROCESS, 0, 0, 0);
 }
