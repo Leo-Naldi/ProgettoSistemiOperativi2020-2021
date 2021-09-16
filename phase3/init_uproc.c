@@ -17,6 +17,8 @@ int io_dev_mutex[6][8];  /* Semafori per la mutua esclusione sui device di IO */
 								 /* Macro per le righe in sup_exports.h */
 
 
+int master_sem;
+
 static unsigned int ram_top;
 static state_t states[UPROCMAX];
 static support_t supports[UPROCMAX];
@@ -88,15 +90,19 @@ void test()
 		
 	init_uprocs();
 	
+	master_sem = 0;
+
 	for (i = 0; i < UPROCMAX; i++)
 	{
 		SYSCALL(CREATEPROCESS,(int) &(states[i]),(int) &(supports[i]), 0);
 	}
-
 	
-	i = 0;
+	for (i = 0; i < UPROCMAX; i++)
+	{
+		SYSCALL(PASSEREN, (int) &master_sem, 0, 0);
+	}
 
-	SYSCALL(PASSEREN, (int) &(i), 0, 0);   /* Finira' con un panic */
+	SYSCALL(TERMPROCESS, 0, 0, 0);		
 }
 
 

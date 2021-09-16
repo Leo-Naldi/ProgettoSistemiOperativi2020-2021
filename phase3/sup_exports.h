@@ -10,6 +10,8 @@
 
 extern int io_dev_mutex[6][8];  /* Semafori per la mutua esclusione sui device di IO */ 
 
+extern int master_sem;
+
 #define DISK_ROW 0
 #define FLASH_ROW 1
 #define NTW_ROW 2

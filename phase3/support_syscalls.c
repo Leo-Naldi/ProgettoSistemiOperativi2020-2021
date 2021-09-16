@@ -14,6 +14,7 @@ typedef unsigned int devregtr;
 
 static void syscall9(state_t *caller){
   
+  SYSCALL(VERHOGEN, (int) &master_sem, 0, 0);
   SYSCALL(TERMINATEPROCESS, 0, 0, 0);
 }
 
@@ -93,7 +94,6 @@ static void syscall11(state_t *caller){
 
 static void syscall12(state_t *caller){
   unsigned int old_status;
-  int i;
 
   char *virtAddr = (char*) caller->reg_a1;
   int len = caller->reg_a2;
@@ -104,16 +104,13 @@ static void syscall12(state_t *caller){
   termreg_t *base = (termreg_t*) GET_DEVREG_ADDR(7, devno);
   devregtr status;
 
-  i = 0;
-
-
   SYSCALL(PASSEREN, (int) &(io_dev_mutex[TERMW_ROW][devno]), 0, 0);
-  while(i < len){
+  while(car_tr < len){
     
     old_status = getSTATUS();
 	setSTATUS(old_status & (~IECON) & (~TEBITON));
     
-    base->transm_command = PRINTCHR | (((devregtr) (virtAddr[i])) << BYTELEN);
+    base->transm_command = PRINTCHR | (((devregtr) (virtAddr[car_tr])) << BYTELEN);
     status = SYSCALL(WAITIO, TERMINT, devno, 0);
     
     setSTATUS(old_status);
@@ -124,7 +121,6 @@ static void syscall12(state_t *caller){
       LDST(caller);
     }
     car_tr++;
-    i++;
   }
   SYSCALL(VERHOGEN, (int) &(io_dev_mutex[TERMW_ROW][devno]), 0, 0);
   caller->reg_v0 = car_tr;
@@ -144,6 +140,7 @@ static void syscall12(state_t *caller){
 
 static void syscall13(state_t *caller){
   char *virtAddr = (char*) caller->reg_a1;
+  char rechvd_char;
   if( (((unsigned int)virtAddr) < KUSEG)) syscall9(caller);
 
   unsigned int old_status;
@@ -154,7 +151,7 @@ static void syscall13(state_t *caller){
   devregtr status;
 
   SYSCALL(PASSEREN, (int) &(io_dev_mutex[TERMR_ROW][devno]), 0, 0);
-  while(*virtAddr != '\n'){
+  do {
      
     old_status = getSTATUS();
 	setSTATUS(old_status & (~IECON) & (~TEBITON));
@@ -169,12 +166,11 @@ static void syscall13(state_t *caller){
       caller->reg_v0 = -1 * status;
       LDST(caller);
     }
-    *virtAddr = (status >> 8); /* faccio shift per ottenere il carattere ricevuto */
-    if(*virtAddr == '\n')
-      break;
-    car_tr++;
-    virtAddr++;
-  }
+    rechvd_char = ((status & 0x0000FF00) >> 8); 
+    
+    virtAddr[car_tr++] = rechvd_char;
+  } while (rechvd_char != '\n');
+
   SYSCALL(VERHOGEN,(int) &(io_dev_mutex[TERMR_ROW][devno]), 0, 0);
   caller->reg_v0 = car_tr;
   LDST(caller);
