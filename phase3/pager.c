@@ -99,9 +99,29 @@ static int get_next_swap_index()
 	static int swap_index = 0;
 	int res;
 
-	res = swap_index;
+	res = (swap_index + 1) % SWAPSIZE;
+	swap_index = res;
 
-	swap_index = (swap_index + 1) % SWAPSIZE;
+	if (swap_pool_table[res].sw_asid != NOPROC)
+	{
+		int i;
+
+		for (i = res + 1; i < SWAPSIZE; i++)
+		{
+			if (swap_pool_table[i].sw_asid == NOPROC)
+			{
+				return i;
+			}
+		}
+		
+		for (i = 0; i < res; i++)
+		{
+			if (swap_pool_table[i].sw_asid == NOPROC)
+			{
+				return i;
+			}
+		}
+	}
 
 	return res;
 }
