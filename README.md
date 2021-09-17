@@ -15,30 +15,38 @@ Per far girare il progetto si deve solamente aprire la repo dal terminale e fare
 $	make
 ```
 
-Questo produrrà nella cartella bin i file seguenti: kernel, kernel.core.umps, kernel.stab.umps e la cartella build dove finiranno tutti file compilati \*.o, 
-e la cartella deps dove finranno i file \*.d. A questo punto si deve creare un file .json che contiene le configurazioni. 
+Questo produrrà nella cartella bin i file seguenti: kernel, kernel.core.umps, kernel.stab.umps, la cartella build dove finiranno tutti file compilati \*.o, 
+e la cartella deps dove finranno i file \*.d. A questo punto si deve creare il file p3config.json che contiene le configurazioni. 
+Con questo comando verranno anche compilati i test e creati i device per la fase 3.
+
+E' anche possibile compilare con il comando 
+```bash
+$   make debug
+```
+
+Che aggiungera' la macro \_\_PANDOS\_DEBUGGER\_ACTIVE\_\_, che aggiungera' controlli e variabili (i cui valori sono visualizzabili dal debugger di umps3) utili 
+per debuggare, inoltre con questa macro molte delle situazioni anomale (p.e. errori io sui flash) che non dovrebbero verificarsi nella fase 3 verranno risolte
+con una PANIC() invece che con una SYSCALL(TERMINATE, 0, 0, 0), sempre per facilitare il debugging. Questa modalita' ricompilera' sempre tutto da capo (inclusi
+i test della fase 3)
+
 In fine si apre il umps3 col commando:
 
 ```bash
 $	umps3
 ```
 
-Si carica il file .json e si preme *Power On*, si apre il terminale 0 se preme *Continue* per vedere l'output.
-Umps3 di default cerca i file .core e .stab nella stessa cartella del .json, quindi se questo non si trova in bin occorre settare nell'emulatore i percorsi corretti ai due file. Inoltre occorre
-settare il campo TLB floor address a 0x80000000.
+Si carica il file p3config.json e si preme *Power On*, si apre il terminale 0 se preme *Continue* per vedere l'output.
+Occorre settare il campo TLB floor address a 0x80000000.
 
 ## Note
 
-Il progetto è stato testato su Debian GNU/Linux 9 ed Ubuntu 20.04.2 LTS.
+Il progetto è stato testato su Debian GNU/Linux 9 ed Ubuntu 20.04.2 LTS. 
 
-## Issues
+Occorre fare una make clean prima di passare dal compilare con "make debug" a compilare con "make" per eliminare veramente la macro.
 
-Al momento l'esecuzione di p2test entra nel caso default di p5gen, che stampera' il messaggio "other program trap", e carichera' direttamente l'exception state.
-Il program counter di questo exception state sara' l'indirizzo dell'istruzione che ha causato l'eccezione, e da qui si va in loop. Il test di per se viene completato
-(il processo in loop verra' messo in attesa prima o poi), ma una volta terminati i gli altri processi il test continua a stampare "other program trap" all'infinito.
-Un'hack per "evitare" questo loop e' aggiungere una chiamata SYSCALL(TERMINATETHREAD, 0, 0, 0) nella sezione default di p5gen.
-Le possibili ragioni di questo comportamento possono essere: o rimane un dangling pointer a p5 che causa in qualche modo un'eccezione non prevista,
-oppure un'eccezione non viene letta correttamente, oppure in qualche modo p5 non viene terminato.
+La syscall 13 (READTERMINAL) legge anche il carattere di newline \n, che ci e' sembrata l'implementazione voluta leggendo il test strCat,
+se cosi' non dovesse essere e' sufficiente rimpiazzare il do while con un while.
 
 ## Bug Fixes
-Risolto il loop di other program trap (c'era un bug in outChild). Ora tutte le funzioni di asl.h che sbloccano un processo settano il psemadd a NULL.
+
+Risolto il bug della fase 2 (era un errore in outChild ereditato dalla fase 1).
