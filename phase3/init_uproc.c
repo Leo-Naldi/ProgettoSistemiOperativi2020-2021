@@ -17,16 +17,24 @@ int io_dev_mutex[6][8];  /* Semafori per la mutua esclusione sui device di IO */
 								 /* Macro per le righe in sup_exports.h */
 
 
-int master_sem;
+int master_sem;   /* Semaforo per la terminazione del test */
 
-static unsigned int ram_top;
-static state_t states[UPROCMAX];
-static support_t supports[UPROCMAX];
+static unsigned int ram_top;         /* Usata per l'inizializzazione degli uproc */
+static state_t states[UPROCMAX];     /* Stati iniziali degli uproc */
+static support_t supports[UPROCMAX]; /* Strutture di supporto degli uproc */
 
-static void make_uproc(unsigned int asid, state_t* out_state, support_t* out_sup)
+/*
+ * Inizializza lo stato e la struttura di supporto del processo identificato da asid
+ * */
+static void make_uproc(unsigned int asid)
 {
 	unsigned int i;
 	unsigned int excp_status;
+	state_t* out_state;
+	support_t* out_sup;
+
+	out_state = &(states[asid - 1]);
+	out_sup = &(supports[asid - 1]);
 
 	excp_status = ALLOFF | IEPON | IMON | TEBITON;
 
@@ -66,6 +74,9 @@ static void make_uproc(unsigned int asid, state_t* out_state, support_t* out_sup
 	(out_sup->sup_exceptContext)[GENERALEXCEPT].c_stackPtr = ram_top - asid * PAGESIZE * 2;
 }
 
+/* 
+ * Inizializza le strutture dati per gli uproc
+ * */
 static void init_uprocs()
 {
 	unsigned int asid;
@@ -74,14 +85,15 @@ static void init_uprocs()
 
 	for (asid = 1; asid <= UPROCMAX; asid++)
 	{
-		make_uproc(asid, &(states[asid - 1]), &(supports[asid - 1]));
+		make_uproc(asid);
 	}
 }
 
 void test()
 {
 	int i, j;
-
+	
+	/* Init semafori dei dev */
 	for (i = 0; i < 6; i++)
 		for (j = 0; j < 8; j++)
 			io_dev_mutex[i][j] = 1;

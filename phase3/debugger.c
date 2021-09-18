@@ -18,7 +18,6 @@ int debug_pager_count = 0;
 
 unsigned int debug_badvaddr = 0;
 
-unsigned int debug_cur_running = 0;
 
 
 unsigned int debug_cause = 0;

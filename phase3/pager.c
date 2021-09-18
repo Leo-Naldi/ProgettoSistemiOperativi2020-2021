@@ -14,7 +14,7 @@ static unsigned int swap_pool_h;           /* puntatore all'inizio della swap po
 static swap_t swap_pool_table[SWAPSIZE];   /* swap table */
 static volatile int swap_pool_sem;         /* semaforo per la mutua esclusione sulla swap pool */
 
-/* Ritorna l'indirizzo della pagina INDEX */
+/* Ritorna l'indirizzo della pagina INDEX nella swap pool */
 #define __GET_FRAME(INDEX) (swap_pool_h + ((INDEX) * PAGESIZE))
 
 
@@ -278,6 +278,8 @@ static void pagefault_handler(support_t* sup)
 	
 	LDST(caller);
 }
+
+/* Funzioni Pubbliche */
 
 void init_pager()
 {
