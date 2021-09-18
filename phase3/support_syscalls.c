@@ -52,15 +52,15 @@ static void syscall11(state_t *caller){
 
   unsigned int old_status;
 
-  if( (((unsigned int) virtAddr) < KUSEG) || (len < 0) || (len > 128)) syscall9(caller);
-  unsigned int car_tr = 0;
-  unsigned int devno = get_asid(caller->entry_hi) - 1; /* (ASID - 1) % 8 */
+  if( (((unsigned int) virtAddr) < KUSEG) || (len < 0) || (len > 128)) syscall9(caller); /* indirizzo out of range */
+  unsigned int car_tr = 0; /* caratteri trasmessi */
+  unsigned int devno = get_asid(caller->entry_hi) - 1; /* (ASID - 1) */
   dtpreg_t *printer = (dtpreg_t*) GET_DEVREG_ADDR(PRNTINT, devno);
   devregtr status;
 
-  SYSCALL(PASSEREN,(int) &(io_dev_mutex[PRINTER_ROW][devno]), 0, 0);
+  SYSCALL(PASSEREN,(int) &(io_dev_mutex[PRINTER_ROW][devno]), 0, 0); /* mutua esclusione sul semaforo del device */
   
-  while(car_tr < len){
+  while(car_tr < len){ /* trasmissione dei caratteri */
     
     old_status = getSTATUS();
     setSTATUS(old_status & (~IECON) & (~TEBITON));
@@ -78,7 +78,7 @@ static void syscall11(state_t *caller){
     }
     car_tr++;
   }
-  SYSCALL(VERHOGEN, (int) &(io_dev_mutex[PRINTER_ROW][devno]), 0, 0);
+  SYSCALL(VERHOGEN, (int) &(io_dev_mutex[PRINTER_ROW][devno]), 0, 0); /* rilascio */
   caller->reg_v0 = car_tr;
   LDST(caller);
 }
@@ -100,13 +100,13 @@ static void syscall12(state_t *caller){
   char *virtAddr = (char*) caller->reg_a1;
   int len = caller->reg_a2;
   
-  if( (((unsigned int) virtAddr) < KUSEG) || (len < 0) || (len > 128)) syscall9(caller);
-  unsigned int car_tr = 0;
-  unsigned int devno = get_asid(caller->entry_hi) - 1; /* (ASID - 1) % 8 */
+  if( (((unsigned int) virtAddr) < KUSEG) || (len < 0) || (len > 128)) syscall9(caller); /* indirizzo out of range */
+  unsigned int car_tr = 0; /* caratteri trasmessi */
+  unsigned int devno = get_asid(caller->entry_hi) - 1; /* (ASID - 1) */
   termreg_t *base = (termreg_t*) GET_DEVREG_ADDR(7, devno);
   devregtr status;
 
-  SYSCALL(PASSEREN, (int) &(io_dev_mutex[TERMW_ROW][devno]), 0, 0);
+  SYSCALL(PASSEREN, (int) &(io_dev_mutex[TERMW_ROW][devno]), 0, 0); /* mutua esclusione sul semaforo del device */
   while(car_tr < len){
     
     old_status = getSTATUS();
@@ -124,7 +124,7 @@ static void syscall12(state_t *caller){
     }
     car_tr++;
   }
-  SYSCALL(VERHOGEN, (int) &(io_dev_mutex[TERMW_ROW][devno]), 0, 0);
+  SYSCALL(VERHOGEN, (int) &(io_dev_mutex[TERMW_ROW][devno]), 0, 0); /* rilascio */
   caller->reg_v0 = car_tr;
   LDST(caller);
 }
@@ -147,18 +147,18 @@ static void syscall13(state_t *caller){
 
   unsigned int old_status;
 
-  unsigned int car_tr = 0;
-  unsigned int devno = get_asid(caller->entry_hi) - 1; /* (ASID - 1) % 8 */
+  unsigned int car_tr = 0; /* caratteri trasmessi */
+  unsigned int devno = get_asid(caller->entry_hi) - 1; /* (ASID - 1) */
   devregtr *base = (devregtr*) GET_DEVREG_ADDR(TERMINT, devno);
   devregtr status;
 
-  SYSCALL(PASSEREN, (int) &(io_dev_mutex[TERMR_ROW][devno]), 0, 0);
+  SYSCALL(PASSEREN, (int) &(io_dev_mutex[TERMR_ROW][devno]), 0, 0); /* mutua esclusione sul semaforo del device */
   do {
      
     old_status = getSTATUS();
 	setSTATUS(old_status & (~IECON) & (~TEBITON));
     
-    *(base + 1) = 2;  /* Read char */
+    *(base + 1) = 2;  /* legge carattere */
     status = SYSCALL(WAITIO, TERMINT, devno, 1);
     
     setSTATUS(old_status);
@@ -173,7 +173,7 @@ static void syscall13(state_t *caller){
     virtAddr[car_tr++] = rechvd_char;
   } while (rechvd_char != '\n');
 
-  SYSCALL(VERHOGEN,(int) &(io_dev_mutex[TERMR_ROW][devno]), 0, 0);
+  SYSCALL(VERHOGEN,(int) &(io_dev_mutex[TERMR_ROW][devno]), 0, 0); /* rilascio */
   caller->reg_v0 = car_tr;
   LDST(caller);
 }
